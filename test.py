@@ -27,6 +27,12 @@ from telegram.ext import (
     filters,
 )
 
+from dotenv import load_dotenv
+import os
+# Load environment variables from .env file
+load_dotenv()
+TOKEN = os.getenv("TOKEN")
+
 # Enable logging
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -134,7 +140,7 @@ def main() -> None:
     """Run the bot."""
     # Create the Application and pass it your bot's token.
     persistence = PicklePersistence(filepath="conversationbot")
-    application = Application.builder().token("7879762613:AAFLGGOSyXpaGJWWnzTjt7A6lz0JYX4p7EY").persistence(persistence).build()
+    application = Application.builder().token(TOKEN).persistence(persistence).build()
 
     # Add conversation handler with the states CHOOSING, TYPING_CHOICE and TYPING_REPLY
     conv_handler = ConversationHandler(
