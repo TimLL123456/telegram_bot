@@ -1,108 +1,259 @@
 <!DOCTYPE html>
-<html ng-app="custom-webapp-ui" lang="en">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Food Preferences</title>
-    <!-- Load the Telegram Library -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Load the AngularJS Library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: white;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            font-size: 16px;
-            line-height: 1.5;
-            color: #333;
-        }
-        
-        .food-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            width: 100%;
-        }
-        
-        .food-name {
-            min-width: 100px;
-            font-weight: 500;
-        }
-        
-        .food-value {
-            margin: 0 10px;
-            min-width: 30px;
-            text-align: center;
-        }
-        
-        input[type="range"] {
-            flex-grow: 1;
-            height: 30px;
-            -webkit-appearance: none;
-            background: transparent;
-        }
-        
-        input[type="range"]::-webkit-slider-runnable-track {
-            height: 6px;
-            background: #0088cc;
-            border-radius: 3px;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #0088cc;
-            margin-top: -7px;
-        }
-        
-        .header {
-            font-size: 18px;
-            font-weight: 500;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-    </style>
-    <script>
-        // Initialize the AngularJS app
-        angular.module("custom-webapp-ui", []).controller('CustomUIController', function CustomUIController($scope) {
-            // Initialize our slider values
-            $scope.foods = [
-                { name: "Fruits", value: 5 },
-                { name: "Vegetables", value: 5 },
-                { name: "Meat", value: 5 },
-                { name: "Dairy", value: 5 }
-            ];
-            
-            // Initialize and configure the Telegram main button
-            Telegram.WebApp.ready();
-            Telegram.WebApp.expand();
-            
-            const mainButton = Telegram.WebApp.MainButton;
-            mainButton.text = "SAVE PREFERENCES";
-            mainButton.color = "#0088cc";
-            mainButton.textColor = "#ffffff";
-            mainButton.enable();
-            mainButton.show();
-            
-            // Send data back to bot when clicked
-            mainButton.onClick(function() {
-                Telegram.WebApp.sendData(JSON.stringify($scope.foods));
-            });
-        });
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <style>
+    /* Reset and base styles */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .login-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+    }
+
+    .login-header {
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .login-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-description {
+      color: #666;
+      font-size: 0.875rem;
+    }
+
+    .login-form {
+      padding: 0 1.5rem 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-input-wrapper {
+      position: relative;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .form-input:invalid {
+      border-color: #ef4444;
+    }
+
+    .form-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1rem;
+      height: 1rem;
+      color: #6b7280;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .checkbox-input {
+      margin-right: 0.5rem;
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .checkbox-label {
+      font-size: 0.875rem;
+      color: #333;
+    }
+
+    .login-button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .login-button:hover {
+      background-color: #1d4ed8;
+    }
+
+    .login-button:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
+    }
+
+    .login-footer {
+      padding: 1.5rem;
+      text-align: center;
+      border-top: 1px solid #eee;
+    }
+
+    .login-link {
+      color: #2563eb;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+
+    .login-link:hover {
+      text-decoration: underline;
+    }
+
+    .login-text {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      display: none;
+    }
+
+    input:invalid:not(:placeholder-shown) + .error-message {
+      display: block;
+    }
+
+    /* SVG Icons */
+    .icon-mail {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='20' height='16' x='2' y='4' rx='2'/%3E%3Cpath d='m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .icon-lock {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='11' x='3' y='11' rx='2' ry='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .login-card {
+        box-shadow: none;
+      }
+      
+      body {
+        background-color: white;
+      }
+    }
+  </style>
 </head>
-<body ng-controller="CustomUIController">
-    <div class="header">Set Your Food Preferences</div>
-    
-    <div ng-repeat="food in foods" class="food-item">
-        <div class="food-name">{{food.name}}</div>
-        <div class="food-value">{{food.value}}</div>
-        <input type="range" min="1" max="10" ng-model="food.value" ng-change="food.value = parseInt(food.value)">
+<body>
+  <div class="login-card">
+    <div class="login-header">
+      <h1 class="login-title">Login</h1>
+      <p class="login-description">Enter your credentials to access your account</p>
     </div>
+    
+    <form class="login-form" action="#" method="POST">
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <div class="form-input-wrapper">
+          <span class="form-icon icon-mail"></span>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="name@example.com" 
+            required
+            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+          >
+          <span class="error-message">Please enter a valid email address</span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <div class="form-input-wrapper">
+          <span class="form-icon icon-lock"></span>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-input" 
+            placeholder="Enter your password" 
+            required
+            minlength="6"
+          >
+          <span class="error-message">Password must be at least 6 characters</span>
+        </div>
+      </div>
+      
+      <div class="checkbox-group">
+        <input type="checkbox" id="remember" name="remember" class="checkbox-input">
+        <label for="remember" class="checkbox-label">Remember me</label>
+      </div>
+      
+      <button type="submit" class="login-button">Log in</button>
+    </form>
+    
+    <div class="login-footer">
+      <a href="#" class="login-link">Forgot your password?</a>
+      <p class="login-text">
+        Don't have an account? <a href="#" class="login-link">Sign up</a>
+      </p>
+    </div>
+  </div>
 </body>
 </html>
