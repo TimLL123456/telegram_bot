@@ -1,26 +1,108 @@
+<!DOCTYPE html>
 <html ng-app="custom-webapp-ui" lang="en">
-  <head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Food Preferences</title>
     <!-- Load the Telegram Library -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!--Load the AngularJS Library-->
+    <!-- Load the AngularJS Library -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: white;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333;
+        }
+        
+        .food-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .food-name {
+            min-width: 100px;
+            font-weight: 500;
+        }
+        
+        .food-value {
+            margin: 0 10px;
+            min-width: 30px;
+            text-align: center;
+        }
+        
+        input[type="range"] {
+            flex-grow: 1;
+            height: 30px;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        
+        input[type="range"]::-webkit-slider-runnable-track {
+            height: 6px;
+            background: #0088cc;
+            border-radius: 3px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #0088cc;
+            margin-top: -7px;
+        }
+        
+        .header {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+    </style>
     <script>
-      //initialize the AngularJS stuff...
-      angular.module("custom-webapp-ui", []).controller('CustomUIController', function CustomUIController($scope) {
-        //init our slider values that we will display
-        $scope.foods = [
-                { name: "fruits", value: 5 },
-                { name: "vegetables", value: 5 },
-                { name: "meat", value: 5 },
-                { name: "dairy", value: 5 }
+        // Initialize the AngularJS app
+        angular.module("custom-webapp-ui", []).controller('CustomUIController', function CustomUIController($scope) {
+            // Initialize our slider values
+            $scope.foods = [
+                { name: "Fruits", value: 5 },
+                { name: "Vegetables", value: 5 },
+                { name: "Meat", value: 5 },
+                { name: "Dairy", value: 5 }
             ];
-      });
+            
+            // Initialize and configure the Telegram main button
+            Telegram.WebApp.ready();
+            Telegram.WebApp.expand();
+            
+            const mainButton = Telegram.WebApp.MainButton;
+            mainButton.text = "SAVE PREFERENCES";
+            mainButton.color = "#0088cc";
+            mainButton.textColor = "#ffffff";
+            mainButton.enable();
+            mainButton.show();
+            
+            // Send data back to bot when clicked
+            mainButton.onClick(function() {
+                Telegram.WebApp.sendData(JSON.stringify($scope.foods));
+            });
+        });
     </script>
-  </head>
-  <body ng-controller="CustomUIController">
-    <div ng-repeat="food in foods">
-      <div style="width: 100px; display: inline-block">{{food.name}} : {{food.value}}</div>
-      <input style="display: inline-block" type="range" min="1" max="10" ng-model="food.value" value="{{food.value}}">
+</head>
+<body ng-controller="CustomUIController">
+    <div class="header">Set Your Food Preferences</div>
+    
+    <div ng-repeat="food in foods" class="food-item">
+        <div class="food-name">{{food.name}}</div>
+        <div class="food-value">{{food.value}}</div>
+        <input type="range" min="1" max="10" ng-model="food.value" ng-change="food.value = parseInt(food.value)">
     </div>
-  </body>
+</body>
 </html>
