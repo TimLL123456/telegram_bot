@@ -41,23 +41,17 @@ async def help(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     await update.message.reply_text(help_text)
 
-async def show_loading(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Show loading animation using answer_callback_query"""
-    query = update.callback_query
-    if query:
-        await query.answer(text="Processing your request...", show_alert=False)
-
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handle incoming user messages."""
     user_message = update.message.text
     
-    # Create a temporary message with "Loading..." text and a spinner
-    loading_message = await update.message.reply_text("⏳ Processing your request...")
+    # Send the loading animation
+    loading_message = await update.message.reply_animation(
+        animation="https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif",  # Example loading GIF URL
+        caption="Processing your request..."  # Optional caption
+    )
     
     try:
-        # Show typing action (optional - can be combined with the loading message)
-        await context.bot.send_chat_action(chat_id=update.effective_chat.id, action="typing")
-        
         # Get response from DeepSeek AI
         response = client.chat.completions.create(
             model="deepseek-chat",
@@ -65,26 +59,31 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 {"role": "system", "content": "You are a helpful assistant"},
                 {"role": "user", "content": user_message},
             ],
+            max_tokens=1024,
             stream=False
         )
-        
+
         ai_response = response.choices[0].message.content
         
-        # Edit the loading message with the actual response
-        await context.bot.edit_message_text(
+        # Delete the loading animation
+        await context.bot.delete_message(
             chat_id=loading_message.chat_id,
-            message_id=loading_message.message_id,
-            text=ai_response
+            message_id=loading_message.message_id
         )
+        
+        # Send the AI response as a new text message
+        await update.message.reply_text(ai_response)
         
     except Exception as e:
         logger.error(f"Error in handle_message: {e}")
-        # Edit the loading message with error text
-        await context.bot.edit_message_text(
+        # Delete the loading animation
+        await context.bot.delete_message(
             chat_id=loading_message.chat_id,
-            message_id=loading_message.message_id,
-            text="⚠️ Sorry, I encountered an error processing your request."
+            message_id=loading_message.message_id
         )
+        # Send an error message as a new text
+        await update.message.reply_text("⚠️ Sorry, I encountered an error processing your request.")
+
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Log errors."""
