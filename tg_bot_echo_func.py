@@ -26,8 +26,17 @@ load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
 async def greet_user(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    # user = update.effective_user
+    # await update.message.reply_text(f"Hi {user.mention_html()}!", parse_mode="HTML")
     user = update.effective_user
-    await update.message.reply_text(f"Hi {user.mention_html()}!", parse_mode="HTML")
+    user_details = (
+        f"ID: {user.id}\n"
+        f"First Name: {user.first_name}\n"
+        f"Last Name: {user.last_name if user.last_name else 'Not provided'}\n"
+        f"Username: @{user.username if user.username else 'Not provided'}\n"
+        f"Language Code: {user.language_code if user.language_code else 'Not provided'}"
+    )
+    await update.message.reply_text(f"Hi {user.mention_html()}!\n\nYour details:\n{user_details}", parse_mode="HTML")
 
 async def echo_(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f"You said: {update.message.text}", parse_mode="HTML")
