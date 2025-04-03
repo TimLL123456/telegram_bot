@@ -38,5 +38,3 @@ async def menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def setup_handlers(app):
       app.add_handler(CommandHandler("start", start))
       app.add_handler(CommandHandler("menu", menu))
-
-
