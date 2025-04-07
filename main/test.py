@@ -33,9 +33,15 @@ def update_user_info(user_info:dict):
         """
         INSERT OR IGNORE INTO users
         (tg_user_id, updated_at, tg_username, tg_user_last_name, tg_user_first_name)
+        VALUES (?, ?, ?, ?, ?)
         """,
-        (user_info["tg_user_id"], user_info["updated_at"], user_info["tg_username"],
-        user_info["tg_user_last_name"], user_info["tg_user_first_name"])
+        (
+            user_info["tg_user_id"],
+            user_info["updated_at"],
+            user_info["tg_username"],
+            user_info["tg_user_last_name"],
+            user_info["tg_user_first_name"]
+        )
     )
     
     db.conn.commit()
