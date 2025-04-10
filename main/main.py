@@ -12,7 +12,7 @@ def log_config():
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
     # Create a file handler to write logs to a file
-    file_handler = logging.FileHandler("./telegram_bot/system_log.log")
+    file_handler = logging.FileHandler("./system_log.log")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(formatter)
 
