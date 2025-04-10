@@ -26,10 +26,11 @@ class Database:
         CREATE TABLE IF NOT EXISTS users(
             tg_user_id INTEGER PRIMARY KEY,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             tg_username TEXT,
             tg_user_last_name TEXT,
-            tg_user_first_name TEXT
+            tg_user_first_name TEXT,
+            default_currency TEXT,
+            language TEXT
         );
         """)
         self.conn.commit()
