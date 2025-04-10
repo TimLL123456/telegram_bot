@@ -56,7 +56,7 @@ class Database:
         SELECT * FROM users
         WHERE tg_user_id = ?
         """, (user_id,))
-        return self.cursor.fetchall()
+        return self.cursor.fetchone()
 
     def conn_close(self):
         self.conn.close()

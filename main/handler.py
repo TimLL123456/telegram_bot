@@ -1,3 +1,5 @@
+# Better Code Structure: https://x.com/i/grok/share/qOrvNKRmWUAn4tSFCIJ1I2gHy
+
 from telegram import (
     Update,
     ReplyKeyboardMarkup,
@@ -13,8 +15,16 @@ from telegram.ext import (
     filters
 )
 
+from database import Database
+
+db = Database()
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+    user = update.effective_user
+    user_id = user.id
+
+    print()
     
     greeting_message = (
         "Hello! 👋 <b>Welcome to your Personal Expense Manager Bot</b>. 💰\n\n"
