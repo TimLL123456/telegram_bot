@@ -8,11 +8,14 @@ from flask import Flask, Response, request
 ### Get all the chatroom messages
 # https://api.telegram.org/bot{TG_API}/getUpdates
 
-### Send
+### Send message from bot to chatroom
 # https://api.telegram.org/bot{TG_API}/sendMessage?chat_id=1174923863&text=Hi%20How%20are%20you
 
-### 
+### Setup webhook
 # https://api.telegram.org/bot{TG_API}/setWebhook?url={serveo.net url}
+
+### Telegram API URL Parameters
+# https://core.telegram.org/bots/api#sendmessage
 
 load_dotenv()
 CMC_API = os.getenv("COINMARKETCAP_API")
