@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from dotenv import load_dotenv
 import requests
@@ -27,8 +28,38 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-           
-        # requests.post("https://api.telegram.org/bot7879762613:AAFLGGOSyXpaGJWWnzTjt7A6lz0JYX4p7EY/sendMessage?chat_id=1174923863&text=Hi%20How%20are%20you")
+
+        ### Send message
+        # user_input = request.get_json()
+        # user_input_json = json.dumps(user_input, indent=4)
+
+        # html_message = f"<pre>\n{user_input_json}\n</pre>"
+        # url = f"https://api.telegram.org/bot{TG_API}/sendMessage"
+
+        # params = {
+        #     "chat_id": 1174923863,
+        #     "text": html_message,
+        #     "parse_mode": "HTML"
+        # }
+
+        ### Set command
+        commands = [
+            {"command": "start", "description": "Start the bot"},
+            {"command": "help", "description": "Get help"}
+        ]
+
+        # Telegram API URL for setMyCommands
+        url = f"https://api.telegram.org/bot{TG_API}/setMyCommands"
+
+        # Parameters for the API request (serialize commands to JSON)
+        data = {
+            "commands": json.dumps(commands)
+        }
+
+        # Send the request to Telegram API
+        response = requests.post(url, data=data)
+
+
         return Response("ok", status=200)
 
     return "<h1>Hello, World!</h1>"
@@ -59,5 +90,3 @@ async def main(crypto):
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
-    
-    
