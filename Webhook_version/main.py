@@ -30,34 +30,34 @@ def index():
     if request.method == 'POST':
 
         ### Send message
-        # user_input = request.get_json()
-        # user_input_json = json.dumps(user_input, indent=4)
+        user_input = request.get_json()
+        user_input_json = json.dumps(user_input, indent=4)
 
-        # html_message = f"<pre>\n{user_input_json}\n</pre>"
-        # url = f"https://api.telegram.org/bot{TG_API}/sendMessage"
+        message = "How are you"
 
-        # params = {
-        #     "chat_id": 1174923863,
-        #     "text": html_message,
-        #     "parse_mode": "HTML"
-        # }
+        url = f"https://api.telegram.org/bot{TG_API}/sendMessage"
 
-        ### Set command
-        commands = [
-            {"command": "start", "description": "Start the bot"},
-            {"command": "help", "description": "Get help"}
-        ]
-
-        # Telegram API URL for setMyCommands
-        url = f"https://api.telegram.org/bot{TG_API}/setMyCommands"
-
-        # Parameters for the API request (serialize commands to JSON)
-        data = {
-            "commands": json.dumps(commands)
+        params = {
+            "chat_id": 1174923863,
+            "text": message,
         }
 
+        ### Set command
+        # commands = [
+        #     {"command": "start", "description": "Start the bot"},
+        #     {"command": "help", "description": "Get help"}
+        # ]
+
+        # Telegram API URL for setMyCommands
+        # url = f"https://api.telegram.org/bot{TG_API}/setMyCommands"
+
+        # Parameters for the API request (serialize commands to JSON)
+        # data = {
+        #     "commands": json.dumps(commands)
+        # }
+
         # Send the request to Telegram API
-        response = requests.post(url, data=data)
+        response = requests.post(url, data=params)
 
 
         return Response("ok", status=200)
