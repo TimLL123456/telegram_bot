@@ -47,6 +47,9 @@ Parameters for the API request (serialize commands to JSON)
 data = {
     "commands": json.dumps(commands)
 }
+
+# Send the request to Telegram API
+response = requests.post(url, data=data)
 ```
 
 2. Remove all Command
@@ -60,4 +63,7 @@ Parameters for the API request (serialize commands to JSON)
 data = {
     "commands": json.dumps(commands)
 }
+
+# Send the request to Telegram API
+response = requests.post(url, data=data)
 ```

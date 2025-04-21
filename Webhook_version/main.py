@@ -42,22 +42,21 @@ def index():
             "text": message,
         }
 
-        ### Set command
-        # commands = [
-        #     {"command": "start", "description": "Start the bot"},
-        #     {"command": "help", "description": "Get help"}
-        # ]
-
-        # Telegram API URL for setMyCommands
-        # url = f"https://api.telegram.org/bot{TG_API}/setMyCommands"
-
-        # Parameters for the API request (serialize commands to JSON)
-        # data = {
-        #     "commands": json.dumps(commands)
-        # }
+        payload = {
+                "chat_id": 1174923863,
+                "text": "Choose an option:",
+                "reply_markup": {
+                    "inline_keyboard": [
+                        [
+                            {"text": "Option 1", "callback_data": "opt1"},
+                            {"text": "Visit Google", "url": "https://google.com"}
+                        ]
+                    ]
+                }
+            }
 
         # Send the request to Telegram API
-        response = requests.post(url, data=params)
+        response = requests.post(url, json=payload)
 
 
         return Response("ok", status=200)
