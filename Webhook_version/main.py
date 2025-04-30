@@ -21,9 +21,9 @@ from flask import Flask, Response, request
 load_dotenv()
 CMC_API = os.getenv("COINMARKETCAP_API")
 TG_API = os.getenv("TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
 app = Flask(__name__)
-
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -38,12 +38,12 @@ def index():
         url = f"https://api.telegram.org/bot{TG_API}/sendMessage"
 
         params = {
-            "chat_id": 1174923863,
+            "chat_id": CHAT_ID,
             "text": message,
         }
 
         payload = {
-                "chat_id": 1174923863,
+                "chat_id": CHAT_ID,
                 "text": "Choose an option:",
                 "reply_markup": {
                     "inline_keyboard": [

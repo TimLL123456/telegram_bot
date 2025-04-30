@@ -67,3 +67,26 @@ data = {
 # Send the request to Telegram API
 response = requests.post(url, data=data)
 ```
+
+# Inline Keyboard Button
+```python
+message = "How are you"
+
+url = f"https://api.telegram.org/bot{TG_API}/sendMessage"
+
+payload = {
+        "chat_id": CHAT_ID,
+        "text": "Choose an option:",
+        "reply_markup": {
+            "inline_keyboard": [
+                [
+                    {"text": "Option 1", "callback_data": "opt1"},
+                    {"text": "Visit Google", "url": "https://google.com"}
+                ]
+            ]
+        }
+    }
+
+# Send the request to Telegram API
+response = requests.post(url, json=payload)
+```

@@ -1,0 +1,11 @@
+# Python bytecode
+__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Logs and temporary files
+*.log
+
+# Environment variables / secrets
+*.env
