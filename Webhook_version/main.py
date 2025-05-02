@@ -1,4 +1,4 @@
-import asyncio
+from openai import OpenAI
 import json
 import os
 from dotenv import load_dotenv
@@ -20,10 +20,26 @@ from flask import Flask, Response, request
 
 load_dotenv()
 CMC_API = os.getenv("COINMARKETCAP_API")
+DEEPSEEK_API = os.getenv("DEEPSEEK_API")
 TG_API = os.getenv("TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 
 app = Flask(__name__)
+
+def ai_response(user_input):
+    """Function to get AI response from Deepseek API."""
+    client = OpenAI(api_key=DEEPSEEK_API, base_url="https://api.deepseek.com")
+
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": f"{user_input}"},
+        ],
+        stream=False
+    )
+
+    return response.choices[0].message.content
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -33,59 +49,7 @@ def index():
         user_input = request.get_json()
         user_input_json = json.dumps(user_input, indent=4)
 
-        message = "How are you"
-
-        url = f"https://api.telegram.org/bot{TG_API}/sendMessage"
-
-        params = {
-            "chat_id": CHAT_ID,
-            "text": message,
-        }
-
-        payload = {
-                "chat_id": CHAT_ID,
-                "text": "Choose an option:",
-                "reply_markup": {
-                    "inline_keyboard": [
-                        [
-                            {"text": "Option 1", "callback_data": "opt1"},
-                            {"text": "Visit Google", "url": "https://google.com"}
-                        ]
-                    ]
-                }
-            }
-
-        # Send the request to Telegram API
-        response = requests.post(url, json=payload)
-
-
-        return Response("ok", status=200)
-
-    return "<h1>Hello, World!</h1>"
-
-async def main(crypto):
-
-    url = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
-    parameters = {
-        "symbol": crypto,
-        "convert": "USD"
-    }
-    headers = {
-        "Accepts": "application/json",
-        "X-CMC_PRO_API_KEY": CMC_API,
-    }
-
-    response = requests.get(
-        url,
-        headers=headers,
-        params=parameters
-    ).json()
-
-    # pprint(response)
-    asset_price = response["data"]["BTC"]["quote"]["USD"]["price"]
-
-    print(f"BTC price: {asset_price}")
-
+    return Response(status=200)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
