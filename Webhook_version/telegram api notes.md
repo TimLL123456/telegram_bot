@@ -90,3 +90,45 @@ payload = {
 # Send the request to Telegram API
 response = requests.post(url, json=payload)
 ```
+
+# LLM Reply Function
+```python
+def ai_response(user_input):
+    """Function to get AI response from Deepseek API."""
+    client = OpenAI(api_key=DEEPSEEK_API, base_url="https://api.deepseek.com")
+
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant"},
+            {"role": "user", "content": f"{user_input}"},
+        ],
+        stream=False
+    )
+
+    return response.choices[0].message.content
+
+def index():
+    if request.method == 'POST':
+
+        ### Send message
+        user_input = request.get_json()
+
+        AI_reply = ai_response(user_input["text"])
+
+        output_format = f"""
+        User Input: {user_input}\n\n
+        AI Reply: {AI_reply}
+        """
+
+        url = f"https://api.telegram.org/bot{TG_API}/sendMessage"
+
+        params = {
+            "chat_id": CHAT_ID,
+            "text": output_format,
+        }
+
+        response = requests.post(url, data=params)
+
+    return Response(status=200)
+```
