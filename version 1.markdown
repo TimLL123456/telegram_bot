@@ -10,6 +10,28 @@
    - **Manual Override**: Allow users to confirm or edit extracted details before saving (e.g., via inline buttons: "Confirm", "Edit Date", "Edit Category").
    - **Command-Based Input**: Support a structured command for quick entry (e.g., `/add Expense Groceries $50 "Bought food" 2025-05-01`).
 
+* **Example**
+
+  1. Paid $25 for a taxi ride this afternoon
+
+  2. Bought concert tickets for 80 dollars yesterday
+
+  3. Spent 12 on coffee and a donut this morning
+
+  4. Got groceries for $45.50 on 2025-05-10
+
+  5. Went to the movies last night and spent 30
+
+  6. Bought a new shirt for 20 bucks today
+
+  7. Had dinner at a restaurant for $75 last Friday
+
+  8. Subscribed to a streaming service for 15 dollars this month
+
+  9. Filled up gas for 40 on 2025-05-08
+
+  10. Bought a book today
+
 ## 2. Simple Statistical Report
    - **Income/Expense by Category**:
      - Display a breakdown of total income and expenses per category (e.g., "Groceries: $150, Salary: $1000").
