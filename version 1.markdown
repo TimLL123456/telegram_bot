@@ -1,5 +1,13 @@
 # Basic Bookkeeping Telegram Bot Features
 
+- [x] [1-transaction-input-and-extraction-by-llm](#1-transaction-input-and-extraction-by-llm)
+- [ ] Database Design
+- [ ] Deploy Database
+- [ ] [2. Simple Statistical Report](#2-simple-statistical-report)
+- [ ] [3-user-interaction-and-management](#3-user-interaction-and-management)
+- [ ] [4-basic-security-and-data-management](#4-basic-security-and-data-management)
+- [ ] [5-telegram-specific-features)](#5-telegram-specific-features)
+
 ## 1. Transaction Input and Extraction by LLM
    - **Description**: Allow users to input transactions via natural language messages (e.g., "Spent $50 on groceries yesterday" or "Earned $200 from freelance work on May 1").
    - **LLM Extraction Features**:
