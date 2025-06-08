@@ -1,0 +1,34 @@
+-- Insert sample categories
+INSERT INTO Categories (category_type, category_name)
+VALUES ('Income', 'Salary'), ('Expense', 'Groceries');
+
+-- Insert sample users
+INSERT INTO Users (user_id, username, default_currency, created_at, updated_at)
+VALUES 
+    (1001, 'john_doe', 'USD', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    (1002, 'jane_smith', 'EUR', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Insert sample categories!
+INSERT INTO Categories (category_type, category_name)
+VALUES 
+    ('Income', 'Salary'),
+    ('Expense', 'Groceries'),
+    ('Expense', 'Rent'),
+    ('Income', 'Freelance'),
+    ('Expense', 'Utilities');
+
+-- Insert sample transactions (will trigger Transaction_History inserts)
+INSERT INTO Transactions (user_id, date, category_id, description, currency, amount)
+VALUES
+    (1001, '2025-06-01', 1, 'Monthly salary', 'USD', 5000.00),
+    (1001, '2025-06-02', 2, 'Grocery shopping', 'USD', -150.75),
+    (1001, '2025-06-03', 3, 'Apartment rent', 'USD', -1200.00),
+    (1002, '2025-06-01', 4, 'Freelance project', 'EUR', 2000.00),
+    (1002, '2025-06-04', 5, 'Electricity bill', 'EUR', -85.30);
+
+UPDATE Transactions
+SET amount = 5500.00, description = 'Monthly salary', updated_at = NOW()
+WHERE transaction_id = 1;
+
+-- DELETE FROM Transactions
+-- WHERE transaction_id = 1;

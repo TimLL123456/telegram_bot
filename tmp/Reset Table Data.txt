@@ -1,0 +1,20 @@
+-- Disable triggers to avoid logging during deletion
+ALTER TABLE Transactions DISABLE TRIGGER after_transaction_insert;
+ALTER TABLE Transactions DISABLE TRIGGER before_transaction_update;
+ALTER TABLE Transactions DISABLE TRIGGER before_transaction_delete;
+
+-- Delete all records from tables
+DELETE FROM Transaction_History;
+DELETE FROM Transactions;
+DELETE FROM Categories;
+DELETE FROM Users;
+
+-- Reset sequence counters
+ALTER SEQUENCE Categories_category_id_seq RESTART WITH 1;
+ALTER SEQUENCE Transactions_transaction_id_seq RESTART WITH 1;
+ALTER SEQUENCE Transaction_History_history_id_seq RESTART WITH 1;
+
+-- Re-enable triggers
+ALTER TABLE Transactions ENABLE TRIGGER after_transaction_insert;
+ALTER TABLE Transactions ENABLE TRIGGER before_transaction_update;
+ALTER TABLE Transactions ENABLE TRIGGER before_transaction_delete;

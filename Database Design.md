@@ -1,5 +1,7 @@
 * User Management 
 
+All the changes in transaction table should create a new record into the transaction history table
+
 ```sql
 -- User table
 CREATE TABLE Users (
@@ -13,8 +15,8 @@ CREATE TABLE Users (
 -- Categories Table:
 CREATE TABLE Categories (
     category_id SERIAL PRIMARY KEY,
-    category_name VARCHAR(50) NOT NULL, -- Groceries, Salary
-    category_type VARCHAR(10) NOT NULL CHECK (category_type IN ('Income', 'Expense'))
+    category_type VARCHAR(10) NOT NULL CHECK (category_type IN ('Income', 'Expense')),
+    category_name VARCHAR(50) NOT NULL -- Groceries, Salary
 );
 
 -- Transactions Table:
@@ -28,6 +30,7 @@ CREATE TABLE Transactions (
     description TEXT,
     currency VARCHAR(3) NOT NULL,
     amount NUMERIC(10,2) NOT NULL,
+    is_deleted BOOLEAN DEFAULT FALSE, -- Added for soft deletes
     FOREIGN KEY (user_id) REFERENCES Users(user_id),
     FOREIGN KEY (category_id) REFERENCES Categories(category_id)
 );
@@ -165,8 +168,8 @@ INSERT INTO Users (user_id, username, default_currency, created_at, updated_at)
 VALUES (1, 'john_doe', 'USD', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Insert sample categories
-INSERT INTO Categories (category_name, category_type)
-VALUES ('Salary', 'Income'), ('Groceries', 'Expense');
+INSERT INTO Categories (category_type, category_name)
+VALUES ('Income', 'Salary'), ('Expense', 'Groceries');
 
 INSERT INTO Transactions (user_id, date, category_id, description, currency, amount)
 VALUES (1, '2025-06-03', 1, 'Monthly salary', 'USD', 5000.00);
@@ -175,6 +178,15 @@ UPDATE Transactions
 SET amount = 5500.00, description = 'Monthly salary (bonus included)', updated_at = NOW()
 WHERE transaction_id = 1;
 
-DELETE FROM Transactions
-WHERE transaction_id = 1;
+-- DELETE FROM Transactions
+-- WHERE transaction_id = 1;
+```
+
+* Reset Table
+
+```sql
+TRUNCATE TABLE transaction_history CASCADE;
+TRUNCATE TABLE transactions CASCADE;
+TRUNCATE TABLE categories CASCADE;
+TRUNCATE TABLE users CASCADE;
 ```
