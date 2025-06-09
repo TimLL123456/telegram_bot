@@ -1,57 +1,61 @@
 * User Management 
 
-All the changes in transaction table should create a new record into the transaction history table
+* 10/06/2025 - latest updated on database schema
 
 ```sql
--- User table
+-- Users Table: Stores user information from Telegram.
 CREATE TABLE Users (
     user_id BIGINT PRIMARY KEY,
-    username VARCHAR(50),
-    default_currency VARCHAR(3) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    username VARCHAR(50) UNIQUE, -- Usernames should be unique
+    default_currency VARCHAR(3) NOT NULL DEFAULT 'USD',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Categories Table:
+-- Categories Table: Stores user-defined and default income/expense categories.
 CREATE TABLE Categories (
     category_id SERIAL PRIMARY KEY,
+    user_id BIGINT, -- NULL for default categories, or FK to a specific user
     category_type VARCHAR(10) NOT NULL CHECK (category_type IN ('Income', 'Expense')),
-    category_name VARCHAR(50) NOT NULL -- Groceries, Salary
+    category_name VARCHAR(50) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+    UNIQUE(user_id, category_name) -- A user cannot have duplicate category names
 );
 
--- Transactions Table:
+-- Transactions Table: Records all financial transactions.
 CREATE TABLE Transactions (
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     transaction_id SERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     date DATE NOT NULL,
     category_id INTEGER NOT NULL,
     description TEXT,
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), -- Amount should be positive
     currency VARCHAR(3) NOT NULL,
-    amount NUMERIC(10,2) NOT NULL,
-    is_deleted BOOLEAN DEFAULT FALSE, -- Added for soft deletes
-    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE, -- For soft deletes
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES Categories(category_id)
 );
 
--- Transaction History Table:
+-- Transaction History Table: An audit trail for all changes to transactions.
 CREATE TABLE Transaction_History (
     history_id SERIAL PRIMARY KEY,
+    change_type VARCHAR(10) NOT NULL, -- e.g., 'INSERT', 'UPDATE', 'DELETE'
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     transaction_id INTEGER NOT NULL,
+    user_id BIGINT NOT NULL,
     date DATE NOT NULL,
     category_id INTEGER NOT NULL,
     description TEXT,
-    currency VARCHAR(3) NOT NULL,
-    amount NUMERIC(10,2) NOT NULL,
-    modified_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    modification_type VARCHAR(10) NOT NULL,
-    FOREIGN KEY (transaction_id) REFERENCES Transactions(transaction_id),
-    FOREIGN KEY (category_id) REFERENCES Categories(category_id)
+    amount NUMERIC(12, 2) NOT NULL,
+    currency VARCHAR(3) NOT NULL
 );
 
+-- Recommended Index for Performance
+-- Speeds up queries fetching transactions for a user within a date range.
+CREATE INDEX idx_transactions_user_date ON Transactions(user_id, date);
 CREATE INDEX idx_transaction_history_transaction_id ON Transaction_History(transaction_id);
-CREATE INDEX idx_transaction_history_modified_at ON Transaction_History(modified_at);
 ```
 
 * Log Transaction Inserts
