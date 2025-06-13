@@ -71,8 +71,18 @@ CREATE INDEX idx_transaction_history_transaction_id ON Transaction_History(trans
 
 ```sql
 -- =============================================================================
+-- ** PROTECT TRANSACTIONS TABLE FROM DELETION
+-- =============================================================================
+CREATE OR REPLACE RULE protect_transaction_delete AS
+    ON DELETE TO "transactions"
+    DO INSTEAD
+        UPDATE "transactions"
+        SET is_deleted = TRUE
+        WHERE transaction_id = OLD.transaction_id;
+
+
+-- =============================================================================
 -- SECTION 1: GENERAL PURPOSE TRIGGER (FOR USERS TABLE)
--- No changes needed here.
 -- =============================================================================
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -84,7 +94,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- =============================================================================
--- SECTION 2: TRANSACTION-SPECIFIC TRIGGER FUNCTIONS (CORRECTED)
+-- SECTION 2: TRANSACTION-SPECIFIC TRIGGER FUNCTIONS
 -- =============================================================================
 
 --
@@ -102,8 +112,8 @@ BEGIN
         description,
         amount,
         currency,
-        changed_at,        -- CORRECTED: Was 'modified_at'
-        change_type        -- CORRECTED: Was 'modification_type'
+        changed_at,
+        change_type
     ) VALUES (
         NEW.transaction_id,
         NEW.user_id,
@@ -123,46 +133,30 @@ $$ LANGUAGE plpgsql;
 --
 -- FUNCTION: log_transaction_update()
 -- PURPOSE:  Logs the state of a transaction *before* it is updated.
---           Also handles updating the 'updated_at' timestamp.
+--           **This function is now enhanced to handle soft deletes.**
+--           If 'is_deleted' is changed from FALSE to TRUE, it logs the action as 'DELETE'.
+--           Otherwise, it logs it as 'UPDATE'.
 --
 CREATE OR REPLACE FUNCTION log_transaction_update()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_change_type VARCHAR(10);
 BEGIN
-    INSERT INTO Transaction_History (
-        transaction_id,
-        user_id,
-        date,
-        category_id,
-        description,
-        amount,
-        currency,
-        changed_at,        -- CORRECTED: Was 'modified_at'
-        change_type        -- CORRECTED: Was 'modification_type'
-    ) VALUES (
-        OLD.transaction_id,
-        OLD.user_id,
-        OLD.date,
-        OLD.category_id,
-        OLD.description,
-        OLD.amount,
-        OLD.currency,
-        NOW(),
-        'UPDATE'
-    );
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+    -- STEP 1: Check if the record is already soft-deleted.
+    -- If it is, raise an exception to block any further modifications.
+    IF OLD.is_deleted = TRUE THEN
+        RAISE EXCEPTION 'Cannot modify a transaction that has already been deleted (transaction_id: %).', OLD.transaction_id;
+    END IF;
 
+    -- STEP 2: If the record is active, determine the change type.
+    -- We know OLD.is_deleted is FALSE because of the check above.
+    IF NEW.is_deleted = TRUE THEN
+        v_change_type := 'DELETE'; -- This is the first time it's being soft-deleted.
+    ELSE
+        v_change_type := 'UPDATE'; -- This is a standard update on an active record.
+    END IF;
 
---
--- FUNCTION: log_transaction_delete()
--- PURPOSE:  Logs the state of a transaction *before* it is deleted.
---           This function was already correct.
---
-CREATE OR REPLACE FUNCTION log_transaction_delete()
-RETURNS TRIGGER AS $$
-BEGIN
+    -- STEP 3: Log the change to the history table.
     INSERT INTO Transaction_History (
         transaction_id,
         user_id,
@@ -182,116 +176,201 @@ BEGIN
         OLD.amount,
         OLD.currency,
         NOW(),
-        'DELETE'
+        v_change_type
     );
-    RETURN OLD;
+
+    -- STEP 4: Update the 'updated_at' timestamp and allow the transaction.
+    NEW.updated_at = NOW();
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
 
 -- =============================================================================
 -- SECTION 3: TRIGGER DEFINITIONS
--- No changes needed here, just re-attaching the corrected functions.
+-- Applying the functions to the tables.
 -- =============================================================================
 
--- It's good practice to drop existing triggers before creating them to avoid errors.
+-- Drop existing triggers to ensure a clean setup
 DROP TRIGGER IF EXISTS trigger_users_updated_at ON Users;
+DROP TRIGGER IF EXISTS after_transaction_insert ON Transactions;
+DROP TRIGGER IF EXISTS before_transaction_update ON Transactions;
+DROP TRIGGER IF EXISTS before_transaction_delete ON Transactions; -- Dropping the old delete trigger
+
+-- Trigger for the Users table
 CREATE TRIGGER trigger_users_updated_at
 BEFORE UPDATE ON Users
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS after_transaction_insert ON Transactions;
+-- Trigger for new transactions
 CREATE TRIGGER after_transaction_insert
 AFTER INSERT ON Transactions
 FOR EACH ROW
 EXECUTE FUNCTION log_transaction_insert();
 
-DROP TRIGGER IF EXISTS before_transaction_update ON Transactions;
+-- Trigger for updates and soft deletes on transactions
 CREATE TRIGGER before_transaction_update
 BEFORE UPDATE ON Transactions
 FOR EACH ROW
 EXECUTE FUNCTION log_transaction_update();
-
-DROP TRIGGER IF EXISTS before_transaction_delete ON Transactions;
-CREATE TRIGGER before_transaction_delete
-BEFORE DELETE ON Transactions
-FOR EACH ROW
-EXECUTE FUNCTION log_transaction_delete();
 ```
 
 * Example
 
 ```sql
 -- =============================================================================
--- FILE: insert_sample_data.sql
--- DESCRIPTION: Populates the database with sample records and demonstrates
---              the functionality of the auditing triggers.
+-- ** PROTECT TRANSACTIONS TABLE FROM DELETION
+-- =============================================================================
+CREATE OR REPLACE RULE protect_transaction_delete AS
+    ON DELETE TO "transactions"
+    DO INSTEAD
+        UPDATE "transactions"
+        SET is_deleted = TRUE
+        WHERE transaction_id = OLD.transaction_id;
+
+
+-- =============================================================================
+-- SECTION 1: GENERAL PURPOSE TRIGGER (FOR USERS TABLE)
+-- =============================================================================
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- =============================================================================
+-- SECTION 2: TRANSACTION-SPECIFIC TRIGGER FUNCTIONS
 -- =============================================================================
 
--- The order of these operations is important due to foreign key constraints.
-
--- STEP 1: Insert Users
--- We need users before we can add categories or transactions for them.
-INSERT INTO Users (user_id, username, default_currency) VALUES
-(111222333, 'john_doe', 'USD'),
-(444555666, 'jane_smith', 'EUR');
-
--- STEP 2: Insert Categories for Each User
--- These categories belong to the users we just created.
-INSERT INTO Categories (user_id, category_type, category_name) VALUES
--- John Doe's Categories
-(111222333, 'Income', 'Salary'),
-(111222333, 'Expense', 'Groceries'),
-(111222333, 'Expense', 'Transport'),
-(111222333, 'Expense', 'Entertainment'),
--- Jane Smith's Categories
-(444555666, 'Income', 'Consulting'),
-(444555666, 'Expense', 'Rent'),
-(444555666, 'Expense', 'Utilities');
-
--- STEP 3: Insert Initial Transactions
--- This will trigger the 'after_transaction_insert' trigger for each row.
--- We use subqueries to get the correct category_id, which is best practice.
-INSERT INTO Transactions (user_id, date, category_id, description, amount, currency) VALUES
--- John's Salary (this will become transaction_id = 1)
-(111222333, '2025-06-01', (SELECT category_id FROM Categories WHERE user_id = 111222333 AND category_name = 'Salary'), 'Monthly pay', 4500.00, 'USD'),
--- John's Groceries (this will become transaction_id = 2)
-(111222333, '2025-06-05', (SELECT category_id FROM Categories WHERE user_id = 111222333 AND category_name = 'Groceries'), 'Weekly shopping', 95.50, 'USD'),
--- John's Transport (this will become transaction_id = 3, and will be deleted later)
-(111222333, '2025-06-07', (SELECT category_id FROM Categories WHERE user_id = 111222333 AND category_name = 'Transport'), 'Taxi to airport', 55.00, 'USD'),
--- Jane's Consulting Income (this will become transaction_id = 4)
-(444555666, '2025-06-10', (SELECT category_id FROM Categories WHERE user_id = 444555666 AND category_name = 'Consulting'), 'Project X payment', 2000.00, 'EUR');
+--
+-- FUNCTION: log_transaction_insert()
+-- PURPOSE:  Logs a new transaction record into the history table.
+--
+CREATE OR REPLACE FUNCTION log_transaction_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO Transaction_History (
+        transaction_id,
+        user_id,
+        date,
+        category_id,
+        description,
+        amount,
+        currency,
+        changed_at,
+        change_type
+    ) VALUES (
+        NEW.transaction_id,
+        NEW.user_id,
+        NEW.date,
+        NEW.category_id,
+        NEW.description,
+        NEW.amount,
+        NEW.currency,
+        NOW(),
+        'INSERT'
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 
--- STEP 4: Demonstrate the UPDATE Trigger
--- We are updating John's grocery bill.
--- This will trigger the 'before_transaction_update' trigger.
--- The history table will log the *old* values ($95.50).
-UPDATE Transactions
-SET amount = 102.75, description = 'Weekly shopping + supplies'
-WHERE transaction_id = 2; -- We are targeting the transaction with id = 2.
+--
+-- FUNCTION: log_transaction_update()
+-- PURPOSE:  Logs the state of a transaction *before* it is updated.
+--           **This function is now enhanced to handle soft deletes.**
+--           If 'is_deleted' is changed from FALSE to TRUE, it logs the action as 'DELETE'.
+--           Otherwise, it logs it as 'UPDATE'.
+--
+CREATE OR REPLACE FUNCTION log_transaction_update()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_change_type VARCHAR(10);
+BEGIN
+    -- STEP 1: Check if the record is already soft-deleted.
+    -- If it is, raise an exception to block any further modifications.
+    IF OLD.is_deleted = TRUE THEN
+        RAISE EXCEPTION 'Cannot modify a transaction that has already been deleted (transaction_id: %).', OLD.transaction_id;
+    END IF;
+
+    -- STEP 2: If the record is active, determine the change type.
+    -- We know OLD.is_deleted is FALSE because of the check above.
+    IF NEW.is_deleted = TRUE THEN
+        v_change_type := 'DELETE'; -- This is the first time it's being soft-deleted.
+    ELSE
+        v_change_type := 'UPDATE'; -- This is a standard update on an active record.
+    END IF;
+
+    -- STEP 3: Log the change to the history table.
+    INSERT INTO Transaction_History (
+        transaction_id,
+        user_id,
+        date,
+        category_id,
+        description,
+        amount,
+        currency,
+        changed_at,
+        change_type
+    ) VALUES (
+        OLD.transaction_id,
+        OLD.user_id,
+        OLD.date,
+        OLD.category_id,
+        OLD.description,
+        OLD.amount,
+        OLD.currency,
+        NOW(),
+        v_change_type
+    );
+
+    -- STEP 4: Update the 'updated_at' timestamp and allow the transaction.
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 
--- STEP 5: Demonstrate the DELETE Trigger
--- We are deleting John's taxi expense.
--- This will trigger the 'before_transaction_delete' trigger.
--- The transaction will be removed from the Transactions table, but logged in history.
-DELETE FROM Transactions
-WHERE transaction_id = 3; -- We are targeting the transaction with id = 3.
+-- =============================================================================
+-- SECTION 3: TRIGGER DEFINITIONS
+-- Applying the functions to the tables.
+-- =============================================================================
 
+-- Drop existing triggers to ensure a clean setup
+DROP TRIGGER IF EXISTS trigger_users_updated_at ON Users;
+DROP TRIGGER IF EXISTS after_transaction_insert ON Transactions;
+DROP TRIGGER IF EXISTS before_transaction_update ON Transactions;
+DROP TRIGGER IF EXISTS before_transaction_delete ON Transactions; -- Dropping the old delete trigger
 
--- STEP 6: Verify the Results
--- Run these SELECT statements to see the outcome.
+-- Trigger for the Users table
+CREATE TRIGGER trigger_users_updated_at
+BEFORE UPDATE ON Users
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
--- A) Check the final state of the Transactions table.
---    Note that transaction_id=3 is gone, and transaction_id=2 is updated.
-SELECT * FROM Transactions ORDER BY transaction_id;
+-- Trigger for new transactions
+CREATE TRIGGER after_transaction_insert
+AFTER INSERT ON Transactions
+FOR EACH ROW
+EXECUTE FUNCTION log_transaction_insert();
 
--- B) Check the Transaction_History table for the complete audit trail.
---    You should see 6 rows:
---    - 4 for the initial INSERTs.
---    - 1 for the UPDATE (showing the old amount of 95.50).
---    - 1 for the DELETE.
-SELECT * FROM Transaction_History ORDER BY history_id;
+-- Trigger for updates and soft deletes on transactions
+CREATE TRIGGER before_transaction_update
+BEFORE UPDATE ON Transactions
+FOR EACH ROW
+EXECUTE FUNCTION log_transaction_update();
+```
+
+* Reset All Record
+
+```sql
+-- 這將刪除 public 結構描述中的所有內容 (資料表、函式、觸發器等)
+DROP SCHEMA public CASCADE;
+
+-- 這會重新建立一個空的結構描述，可用於後續的資料庫遷移或全新設定
+CREATE SCHEMA public;
 ```
