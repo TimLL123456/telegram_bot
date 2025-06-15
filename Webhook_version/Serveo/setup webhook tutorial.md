@@ -1,4 +1,4 @@
-# Setup webhook and expose localhost server to internet
+# Setup Serveo.net webhook and expose localhost server to internet
 
 1. **Run flask app to host local server**
 
