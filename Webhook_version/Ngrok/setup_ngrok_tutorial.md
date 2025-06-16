@@ -39,3 +39,13 @@
             ```
             ngrok http [your localhost url]
             ```
+
+3. Set Webhook for telegram
+
+    ```text
+    https://api.telegram.org/bot[telegram bot token]/setWebhook?url=[your public url from Ngrok]
+    ```
+
+    setup_url = https://api.telegram.org/bot7879762613:AAFLGGOSyXpaGJWWnzTjt7A6lz0JYX4p7EY/setWebhook?url=https://84b98161c0dc999ef1c8a8aee9342f53.serveo.net/
+
+    * copy the setup_url to the browser
