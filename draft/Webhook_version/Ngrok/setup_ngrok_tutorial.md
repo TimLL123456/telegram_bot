@@ -38,6 +38,7 @@
 
             ```
             ngrok http [your localhost url]
+            ngrok http http://127.0.0.1:5000
             ```
 
 3. Set Webhook for telegram

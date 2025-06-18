@@ -36,7 +36,7 @@ prompt = ChatPromptTemplate.from_messages(
             """You are an expert bookkeeping assistant, fluent in both English and Cantonese. Your task is to extract transaction details from the user's message.
 
             **Rules & Context:**
-            - The current date is {current_date} in ISO format (e.g., 2025-05-02). If the user mentions a relative date like 'yesterday' or '琴日', calculate the absolute date.
+            - The current date is {current_date} in ISO format (e.g., 2025-05-02).
             - The currency is always HKD.
             - If the message is a transaction, set 'is_transaction' to True.
             - If the message is NOT a transaction (like a greeting), set 'is_transaction' to False and other fields to null.
