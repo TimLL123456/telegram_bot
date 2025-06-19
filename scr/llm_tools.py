@@ -15,6 +15,7 @@ class TransactionData(BaseModel):
     date: Optional[str] = Field(description="Date of the transaction in ISO format (e.g., 2025-05-02). Should be null if not a transaction.")
     category: Optional[str] = Field(description="Category of the transaction (e.g., Food, Transport, Shopping). Should be null if not a transaction.")
     description: Optional[str] = Field(description="A concise summary of the transaction. Should be null if not a transaction.")
+    currency: Optional[str] = Field("HKD", description="The currency of the transaction (e.g., USD, HKD, TWD).")
     price: Optional[float] = Field(description="Price of the transaction (must be a number). Should be null if not a transaction.")
 
 class PerplexityLLM:

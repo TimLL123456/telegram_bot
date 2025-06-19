@@ -50,3 +50,5 @@
     setup_url = https://api.telegram.org/bot7879762613:AAFLGGOSyXpaGJWWnzTjt7A6lz0JYX4p7EY/setWebhook?url=https://84b98161c0dc999ef1c8a8aee9342f53.serveo.net/
 
     * copy the setup_url to the browser
+
+https://api.telegram.org/bot7691509250:AAHkYDN_WFojlxxsXlqoPiiPelj9CyeCK_4/setWebhook?url=https://1a43-223-18-94-64.ngrok-free.app
