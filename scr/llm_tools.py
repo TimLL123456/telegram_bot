@@ -54,7 +54,7 @@ class PerplexityLLM:
 
     def extract_bookkeeping_features(self, user_input: str) -> dict:
         """
-        Extracts bookkeeping features using a robust prompt and structured output.
+        Extracts bookkeeping features by LLM to generate structured output.
         """
         # 1. Chain the prompt with the LLM and the structured output parser
         structured_llm = self.perplexity.with_structured_output(TransactionData)
