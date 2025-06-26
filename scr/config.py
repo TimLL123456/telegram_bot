@@ -8,7 +8,8 @@ load_dotenv()
 # 1. Define all required environment variable keys and their values in a dictionary.
 #    This makes them easy to check in a loop.
 required_vars = {
-    "PERPLEXITY_API_KEY": os.getenv("PERPLEXITY_API"),
+    "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY"),
+    "PERPLEXITY_API_KEY": os.getenv("PERPLEXITY_API_KEY"),
     "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN"),
     "TELEGRAM_CHAT_ID": os.getenv("TELEGRAM_CHAT_ID"),
     "SUPABASE_URL": os.getenv("SUPABASE_URL"),
@@ -25,6 +26,7 @@ if missing_vars:
     raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
 # If the check passes, you can assign the variables for use in your app
+DEEPSEEK_API_KEY = required_vars["DEEPSEEK_API_KEY"]
 PERPLEXITY_API_KEY = required_vars["PERPLEXITY_API_KEY"]
 TELEGRAM_BOT_TOKEN = required_vars["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = required_vars["TELEGRAM_CHAT_ID"]

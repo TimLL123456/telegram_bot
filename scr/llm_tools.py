@@ -3,6 +3,7 @@ import config
 from pathlib import Path
 from datetime import date
 from langchain_perplexity import ChatPerplexity
+from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import ChatPromptTemplate
 
 from typing import Optional
@@ -21,13 +22,23 @@ class TransactionData(BaseModel):
 class PerplexityLLM:
     """A class to interact with the Perplexity LLM for transaction data extraction."""
 
+    ### "deepseek-chat" / "sonar"
     def __init__(self, model_name: str = "sonar", temperature: float = 0.0):
-        os.environ["PPLX_API_KEY"] = config.PERPLEXITY_API_KEY
-
         self.model_name = model_name
         self.temperature = temperature
 
-        self.perplexity = ChatPerplexity(model=self.model_name, temperature=self.temperature)
+        if model_name == "sonar":
+            os.environ["PPLX_API_KEY"] = config.PERPLEXITY_API_KEY
+
+            # Use Perplexity's Sonar model
+            self.llm = ChatPerplexity(model=self.model_name, temperature=self.temperature)
+        elif model_name == "deepseek-chat":
+            os.environ["DEEPSEEK_API_KEY"] = config.DEEPSEEK_API_KEY
+
+            # Use DeepSeek's Chat model
+            self.llm = ChatDeepSeek(model=self.model_name, temperature=self.temperature,
+)
+
 
         self.prompt = self._create_prompt_template()
 
@@ -57,7 +68,7 @@ class PerplexityLLM:
         Extracts bookkeeping features by LLM to generate structured output.
         """
         # 1. Chain the prompt with the LLM and the structured output parser
-        structured_llm = self.perplexity.with_structured_output(TransactionData)
+        structured_llm = self.llm.with_structured_output(TransactionData)
         chain = self.prompt | structured_llm
 
         # 2. Invoke the chain with the user message and current date
