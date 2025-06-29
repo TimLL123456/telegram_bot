@@ -11,7 +11,6 @@ required_vars = {
     "DEEPSEEK_API_KEY": os.getenv("DEEPSEEK_API_KEY"),
     "PERPLEXITY_API_KEY": os.getenv("PERPLEXITY_API_KEY"),
     "TELEGRAM_BOT_TOKEN": os.getenv("TELEGRAM_BOT_TOKEN"),
-    "TELEGRAM_CHAT_ID": os.getenv("TELEGRAM_CHAT_ID"),
     "SUPABASE_URL": os.getenv("SUPABASE_URL"),
     "SUPABASE_KEY": os.getenv("SUPABASE_KEY")
 }
@@ -29,7 +28,6 @@ if missing_vars:
 DEEPSEEK_API_KEY = required_vars["DEEPSEEK_API_KEY"]
 PERPLEXITY_API_KEY = required_vars["PERPLEXITY_API_KEY"]
 TELEGRAM_BOT_TOKEN = required_vars["TELEGRAM_BOT_TOKEN"]
-TELEGRAM_CHAT_ID = required_vars["TELEGRAM_CHAT_ID"]
 SUPABASE_URL = required_vars["SUPABASE_URL"]
 SUPABASE_KEY = required_vars["SUPABASE_KEY"]
 
@@ -46,7 +44,6 @@ print("All required environment variables are set.")
 
 # # Telegram Configuration
 # TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-# TELEGRAM_CHAT_ID = os.getenv("CHAT_ID")
 # TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 # # Supabase Configuration
@@ -58,7 +55,6 @@ print("All required environment variables are set.")
 # if not all([
 #     PERPLEXITY_API_KEY,
 #     TELEGRAM_BOT_TOKEN,
-#     TELEGRAM_CHAT_ID,
 #     TELEGRAM_API_URL,
 #     SUPABASE_URL,
 #     SUPABASE_KEY,

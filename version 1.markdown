@@ -1,8 +1,8 @@
 # Basic Bookkeeping Telegram Bot Features
 
 - [x] [1-transaction-input-and-extraction-by-llm](#1-transaction-input-and-extraction-by-llm)
-- [ ] Database Design
-- [ ] Deploy Database
+- [x] Database Design
+- [x] Deploy Database
 - [ ] [2. Simple Statistical Report](#2-simple-statistical-report)
 - [ ] [3-user-interaction-and-management](#3-user-interaction-and-management)
 - [ ] [4-basic-security-and-data-management](#4-basic-security-and-data-management)

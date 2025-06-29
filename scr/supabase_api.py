@@ -1,0 +1,93 @@
+import os
+from supabase import create_client
+
+from dotenv import load_dotenv
+load_dotenv()
+
+url= os.environ.get("SUPABASE_URL")
+key= os.environ.get("SUPABASE_KEY")
+supabase = create_client(url, key)
+
+def get_category_id(cat_type:str, cat_name:str,  user_id:int) -> int:
+    """Retrieve the category ID from the database based on category type, name, and user ID."""
+    response = (
+        supabase.table("categories")
+        .select("category_id")
+        .eq("category_type", cat_type)
+        .eq("category_name", cat_name)
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    return response.data[0]["category_id"]
+
+def get_user_categories_info(user_id: int) -> list[tuple[str, str]]:
+    """
+    Fetch all (category_type, category_name) pairs for a specific user.
+    
+    Args:
+        user_id: The user's unique identifier (e.g., 1, 2, 1174923863).
+    
+    Returns:
+        List of tuples like [
+            ("income", "salary"),
+            ("expense", "grocery shopping"),
+            ("expense", "transportation"),
+            ...
+        ]
+    """
+    response = supabase.table("categories") \
+        .select("category_type, category_name") \
+        .eq("user_id", user_id) \
+        .execute()
+    
+    # Extract tuples from response
+    categories = [
+        (record["category_type"], record["category_name"])
+        for record in response.data
+    ]
+
+    return categories
+
+def transaction_insert(transactions: dict) -> None:
+    """Insert a transaction into the Supabase database.
+    
+    Args:
+        transactions (dict): A dictionary containing transaction details.
+        Example:
+        {
+            "user_id": 123456789,
+            "date": "2023-10-01",
+            "category_id": 1,
+            "description": "Grocery shopping",
+            "currency": "HKD",
+            "amount": 200.50
+        }
+    """
+    response = (
+        supabase.table("transactions")
+        .insert(transactions)
+        .execute()
+    )
+
+def get_user_info(user_id: int) -> dict:
+    """
+    Fetch user information from the database.
+    
+    Args:
+        user_id (int): The user's unique identifier.
+    
+    Returns:
+        dict: A dictionary containing user information.
+    """
+    response = (
+        supabase.table("users")
+        .select("*")
+        .eq("user_id", user_id)
+        .execute()
+    )
+    
+    if response.data:
+        return response.data[0]
+    else:
+        return {}

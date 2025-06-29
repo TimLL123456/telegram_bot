@@ -30,7 +30,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 
 os.environ["DEEPSEEK_API_KEY"] = DEEPSEEK_API
 llm = init_chat_model("deepseek-chat", model_provider="deepseek")
-llm = init_chat_model("sonar", model_provider="perplexity")
+# llm = init_chat_model("sonar", model_provider="perplexity")
 
 app = Flask(__name__)
 
