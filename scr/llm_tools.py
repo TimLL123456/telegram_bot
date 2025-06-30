@@ -14,12 +14,12 @@ class TransactionData(BaseModel):
     """Feature formatter to extract features from user text. If the text is not a transaction, set is_transaction to False."""
 
     is_transaction: bool = Field(description="Set to True if the text describes a financial transaction, otherwise set to False.")
-    date: Optional[str] = Field(description="Date of the transaction in ISO format (e.g., 2025-05-02). Should be null if not a transaction.")
-    category_type: Optional[str] = Field(description="Category type of the transaction (e.g., Income, Expense). Should be null if not a transaction.")
-    category_name: Optional[str] = Field(description="Category name of the transaction (e.g., Salary, Transport, Food). Should be null if not a transaction.")
-    description: Optional[str] = Field(description="A concise summary of the transaction. Should be null if not a transaction.")
-    currency: Optional[str] = Field("HKD", description="The currency of the transaction (e.g., USD, HKD, TWD).")
-    price: Optional[float] = Field(description="Price of the transaction (must be a number). Should be null if not a transaction.")
+    date: Optional[str] = Field(description="Date of the transaction in ISO format (e.g., 2025-05-02). Should be None if not a transaction.")
+    category_type: Optional[str] = Field(description="Category type of the transaction (e.g., Income, Expense). Should be None if not a transaction.")
+    category_name: Optional[str] = Field(description="Category name of the transaction (e.g., Salary, Transport, Food). Should be None if not a transaction.")
+    description: Optional[str] = Field(description="A concise summary of the transaction. Should be None if not a transaction.")
+    currency: Optional[str] = Field("HKD", description="The currency of the transaction (e.g., USD, HKD, TWD). Should be None if not a transaction.")
+    price: Optional[float] = Field(description="Price of the transaction (must be a number). Should be None if not a transaction.")
 
 class TransactionExtractorLLM:
     """A class to interact with the Perplexity LLM for transaction data extraction."""
@@ -60,18 +60,41 @@ class TransactionExtractorLLM:
     def extract_bookkeeping_features(self, user_input: str, user_id: int) -> dict:
         """
         Extracts bookkeeping features by LLM to generate structured output.
+
+        Args:
+            user_input (str): The user's input message containing transaction details.
+            user_id (int): The ID of the user, used to fetch user-specific categories.
+        
+        Returns:
+            dict: A dictionary containing the extracted transaction data.
+
+        Example:
+            >>> extractor = TransactionExtractorLLM()
+            >>> user_input = "I had lunch at a restaurant on May 2, 2025, and it cost me 150 HKD."
+            >>> user_id = 12345 # Example user ID
+            >>> extractor.extract_bookkeeping_features(user_input, user_id)
+
+        Returns:
+            {
+                "is_transaction": True,
+                "date": "2025-05-02",
+                "category_type": "Expense",
+                "category_name": "Food",
+                "description": "Lunch at a restaurant",
+                "currency": "HKD",
+                "price": 150.0
+            }
         """
-        # 1. Chain the prompt with the LLM and the structured output parser
+        # Chain the prompt with the LLM and the structured output parser
         structured_llm = self.llm.with_structured_output(TransactionData)
         chain = self.prompt | structured_llm
 
-        # 2. Invoke the chain with the user message and current date
+        # Invoke the chain with the user message and current date
         response_model = chain.invoke({
             "user_message": user_input,
             "current_date": date.today().isoformat(),
             "user_categories": get_user_categories_info(user_id)
         })
-        
-        # 3. Return the model's output as a dictionary
+
         return response_model.model_dump()
         

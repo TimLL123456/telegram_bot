@@ -9,7 +9,21 @@ key= os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
 def get_category_id(cat_type:str, cat_name:str,  user_id:int) -> int:
-    """Retrieve the category ID from the database based on category type, name, and user ID."""
+    """
+    Retrieve the category ID from the database based on category type, name, and user ID.
+    
+    Args:
+        cat_type (str): The type of category (e.g., "income", "expense").
+        cat_name (str): The name of the category (e.g., "salary", "grocery shopping").
+        user_id (int): The user's unique identifier (e.g., 1, 2, 1174923863).
+    
+    Returns:
+        int: The category ID if found, otherwise return None.
+    
+    Example:
+        >>> get_category_id("expense", "grocery shopping", 123456789)
+        >>> 42  # Example category ID
+    """
     response = (
         supabase.table("categories")
         .select("category_id")
@@ -19,7 +33,7 @@ def get_category_id(cat_type:str, cat_name:str,  user_id:int) -> int:
         .execute()
     )
 
-    return response.data[0]["category_id"]
+    return response.data[0]["category_id"] if response.data else None
 
 def get_user_categories_info(user_id: int) -> list[tuple[str, str]]:
     """
@@ -35,6 +49,15 @@ def get_user_categories_info(user_id: int) -> list[tuple[str, str]]:
             ("expense", "transportation"),
             ...
         ]
+
+    Example:
+        >>> get_user_categories_info(123456789)
+        >>> [
+        >>>     ("income", "salary"),
+        >>>     ("expense", "grocery shopping"),
+        >>>     ("expense", "transportation"),
+        >>>     ...
+        >>> ]
     """
     response = supabase.table("categories") \
         .select("category_type, category_name") \
@@ -54,8 +77,12 @@ def transaction_insert(transactions: dict) -> None:
     
     Args:
         transactions (dict): A dictionary containing transaction details.
-        Example:
-        {
+    
+    Returns:
+        None
+    
+    Example:
+        transactions = {
             "user_id": 123456789,
             "date": "2023-10-01",
             "category_id": 1,
@@ -79,6 +106,16 @@ def get_user_info(user_id: int) -> dict:
     
     Returns:
         dict: A dictionary containing user information.
+
+    Example:
+        >>> user_info = get_user_info(123456789)
+        >>> print(user_info)
+        {
+            "user_id": 123456789,
+            "username": "john_doe",
+            "currency": "HKD",
+            ...
+        }
     """
     response = (
         supabase.table("users")

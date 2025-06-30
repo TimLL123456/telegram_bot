@@ -1,6 +1,6 @@
 from llm_tools import TransactionExtractorLLM
 from telegram_api import *
-from flask import Flask, Response, request
+from flask import Flask, Response, request, jsonify
 from supabase_api import *
 import json
 import requests
@@ -12,11 +12,13 @@ app = Flask(__name__)
 user_settings = {}
 extractor_llm = TransactionExtractorLLM(model_name="deepseek-chat", temperature=0.0)
 
-def parse_api_response_info(api_response: dict) -> dict:
+def parse_tg_api_respnse_info(api_response: dict) -> dict:
     """
     Parses the Telegram API response to extract relevant information.
+
     Args:
         api_response (dict): The JSON response from the Telegram API.
+
     Returns:
         dict: A dictionary containing the update type and relevant information.   
     """
@@ -44,6 +46,114 @@ def parse_api_response_info(api_response: dict) -> dict:
     
     return update_type, response_info
 
+@app.route('/api/transaction_parser_llm', methods=['POST'])
+def transaction_parser_llm():
+    """
+    Endpoint to parse transaction details using the LLM.
+    Expects a JSON payload with 'user_id' and 'user_input'.
+    Returns the parsed transaction details.
+
+    Example payload:
+    {
+        "user_id": "123456789",
+        "user_input": "Spent 50 HKD on 7-11 today"
+    }
+
+    Return:
+    {
+        "message": "Transaction processed successfully",
+        "transaction": {
+            "user_id": "123456789",
+            "date": "2023-10-01",
+            "category_id": 1,
+            "description": "Spent 50 HKD on 7-11 today",
+            "currency": "HKD",
+            "amount": 50.0
+        },
+        "llm_response": {
+            "is_transaction": true,
+            "date": "2023-10-01",
+            "category_type": "Expense",
+            "category_name": "Food",
+            "description": "Spent 50 HKD on 7-11 today",
+            "currency": "HKD",
+            "price": 50.0
+        }
+    }
+    """
+    # Handle the incoming POST request from Telegram
+    if request.method == 'POST':
+
+        # Retrieve and validate JSON payload (user ID and user input) from the request JSON
+        transaction_data = request.get_json()
+
+        # Check if the JSON payload contains the required fields
+        if (not transaction_data) or ("user_id" not in transaction_data) or ("user_input" not in transaction_data):
+            error_message = {
+                "error": "Invalid request data",
+                "message": "Please provide 'user_id' and 'user_input' in the request body."
+            }
+            print("Error: Invalid request data.")
+            return jsonify(error_message), 400
+
+        user_id = transaction_data.get("user_id")
+        user_input = transaction_data.get("user_input")
+
+        # Check if the user ID is valid and registered in the database
+        if not get_user_info(user_id):
+            error_message = {
+                "error": "Invalid user ID",
+                "message": "user_id not found in the database. Please register first."
+            }
+            print("Error: User not registered.")
+            return jsonify(error_message), 404
+
+        # Extracts bookkeeping features by LLM
+        llm_response = extractor_llm.extract_bookkeeping_features(user_input=user_input, user_id=user_id)
+
+        # Check if the LLM response indicates a transaction
+        if llm_response["is_transaction"] is False:
+            error_message = {
+                "error": "Invalid transaction input",
+                "message": f"The input does not contain a valid transaction.\n\nuser input:{user_input}\nuser id: {user_id}"
+            }
+            print("Error: No transaction detected in the input.")
+            return jsonify(error_message), 400
+
+        # Retrieve the category ID from supabase database
+        category_id = get_category_id(llm_response["category_type"], llm_response["category_name"], user_id)
+
+        # Check if the category ID is found
+        if category_id is None:
+            error_message = {
+                "error": "Category not found",
+                "category_type": llm_response["category_type"],
+                "category_name": llm_response["category_name"],
+                "user_id": user_id
+            }
+            print("Error: Category not found in the database.")
+            return jsonify(error_message), 404
+
+        print("-"* 50)
+        print(f"LLM Response: {llm_response}")
+
+        # If the LLM response indicates a transaction, prepare the transaction data
+        transactions = {
+            "user_id": user_id,
+            "date": llm_response["date"],
+            "category_id": category_id,
+            "description": llm_response["description"],
+            "currency": llm_response["currency"],
+            "amount": llm_response["price"]
+        }
+
+        # Return success response with transaction and LLM response
+        return jsonify({
+            "message": "Transaction processed successfully",
+            "transaction": transactions,
+            "llm_response": llm_response
+        }), 200
+
 
 @app.route('/', methods=['POST', "GET"])
 def telegram():
@@ -53,7 +163,7 @@ def telegram():
         # Retrieve telegram api response json
         tg_api_response = request.get_json()
         #print(tg_api_response)  # Uncomment for debugging API response
-        update_type, tg_api_response_info = parse_api_response_info(tg_api_response)
+        update_type, tg_api_response_info = parse_tg_api_respnse_info(tg_api_response)
 
         # Retrieve the `user ID` & `user text input` from telegram chatroom api response
         tg_user_id = tg_api_response_info["message"]["chat"]["id"]
@@ -66,8 +176,6 @@ def telegram():
                 "option": None
             }
             print(f"New user {tg_user_id} detected. Initializing settings.")
-
-        print(tg_api_response_info["message"])
 
         # Handle callback queries
         if update_type == "callback_query":
@@ -216,34 +324,26 @@ def telegram():
                 url = f"https://api.telegram.org/bot{config.TELEGRAM_BOT_TOKEN}/sendMessage"
                 requests.post(url, data=params)
 
+        # Pass user input to the transaction parser LLM
+        transaction_parser_llm_response = requests.post(
+            url=f"http://127.0.0.1:5000/api/transaction_parser_llm",
+            json={
+                "user_id": tg_user_id,
+                "user_input": user_input
+            }
+        )
 
-        # # Extracts bookkeeping features by LLM
-        # llm_response = extractor_llm.extract_bookkeeping_features(user_input, user_id)
+        if transaction_parser_llm_response.status_code == 200:
 
-        # # Retrieve the category ID from supabase database
-        # category_id = get_category_id(llm_response["category_type"], llm_response["category_name"], user_id)
+            transaction_parser_llm_response_json = transaction_parser_llm_response.json()
+            llm_response = transaction_parser_llm_response_json.get("llm_response")
+            transaction = transaction_parser_llm_response_json.get("transaction")
 
-        # print("-"* 50)
-        # print(f"LLM Response: {llm_response}")
+            # Insert the transaction into the Supabase database
+            transaction_insert(transaction)
 
-        # # If the LLM response indicates a transaction, prepare the transaction data
-        # if llm_response["is_transaction"]:
-        #     transactions = {
-        #         "user_id": user_id,
-        #         "date": llm_response["date"],
-        #         "category_id": category_id,
-        #         "description": llm_response["description"],
-        #         "currency": llm_response["currency"],
-        #         "amount": llm_response["price"]
-        #     }
-
-        #     # Insert the transaction into the Supabase database
-        #     transaction_insert(transactions)
-
-        # # Send the LLM response to Telegram
-        # SendMessageToTelegram(tg_user_id, llm_response)
-
-    return Response(status=200)
+            # Send the LLM response to Telegram
+            SendMessage(tg_user_id, llm_response)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
