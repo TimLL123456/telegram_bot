@@ -6,8 +6,13 @@ class CallbackManager:
         """Initializes the CommandManager."""
         self.user_settings = user_settings
         self.callbacks = {
-            "change_username": self.change_username,
-            "change_currency": self.change_currency
+            "REGISTER_change_username": self.REGISTER_change_username,
+            "REGISTER_change_currency": self.REGISTER_change_currency,
+            "TRANSACTION_change_date": self.TRANSACTION_change_date,
+            "TRANSACTION_category_type": self.TRANSACTION_category_type,
+            "TRANSACTION_description": self.TRANSACTION_description,
+            "TRANSACTION_currency": self.TRANSACTION_currency,
+            "TRANSACTION_amount": self.TRANSACTION_amount
         }
     
     def callback_exec(self, user_callback_dict: dict) -> None | dict:
@@ -25,7 +30,7 @@ class CallbackManager:
             >>> CallbackManager().callback_exec(user_callback_dict)
         """
         returnable_list = [
-            "change_username", "change_currency"
+            "REGISTER_change_username", "REGISTER_change_currency"
         ]
         callback_data = user_callback_dict["callback_data"]
         
@@ -37,7 +42,7 @@ class CallbackManager:
         
         return return_obj
 
-    def change_username(self, user_callback_dict: dict) -> None:
+    def REGISTER_change_username(self, user_callback_dict: dict) -> None:
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'username'
 
@@ -50,7 +55,7 @@ class CallbackManager:
 
         return self.user_settings
 
-    def change_currency(self, user_callback_dict: dict) -> None:
+    def REGISTER_change_currency(self, user_callback_dict: dict) -> None:
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'currency'
 
@@ -62,3 +67,18 @@ class CallbackManager:
         SendMessage(user_id, change_currency_message)
 
         return self.user_settings
+    
+    def TRANSACTION_change_date(self):
+        pass
+
+    def TRANSACTION_category_type(self):
+        pass
+
+    def TRANSACTION_description(self):
+        pass
+
+    def TRANSACTION_currency(self):
+        pass
+
+    def TRANSACTION_amount(self):
+        pass

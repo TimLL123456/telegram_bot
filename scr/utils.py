@@ -77,8 +77,8 @@ class SettingManager:
         keyboard_setting = {
             "inline_keyboard": [
                 [
-                    {"text": "Change Username", "callback_data": "change_username"},
-                    {"text": "Change Currency", "callback_data": "change_currency"}
+                    {"text": "Change Username", "callback_data": "REGISTER_change_username"},
+                    {"text": "Change Currency", "callback_data": "REGISTER_change_currency"}
                 ]
             ]
         }
@@ -106,8 +106,8 @@ class SettingManager:
         keyboard_setting = {
             "inline_keyboard": [
                 [
-                    {"text": "Change Username", "callback_data": "change_username"},
-                    {"text": "Change Currency", "callback_data": "change_currency"}
+                    {"text": "Change Username", "callback_data": "REGISTER_change_username"},
+                    {"text": "Change Currency", "callback_data": "REGISTER_change_currency"}
                 ]
             ]
         }

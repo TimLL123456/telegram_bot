@@ -43,10 +43,22 @@ class CommandManager:
         user_id = user_command_dict["user_id"]
 
         welcome_message = (
-            "<b>Welcome to the Bookkeeping Bot! 📊</b>\n\n"
-            "I help you track your <i>income</i> and <i>expenses</i>. Just send me transaction details, "
-            "e.g., <code>Spent 50 HKD on 7-11 today</code>, or use commands like <b>/help</b>, <b>/listcategories</b>, or <b>/summary</b>.\n\n"
-            "If you're a first-time user, please use <b>/register</b> to set up your account.\n\n"
+            "<b>Welcome to the Bookkeeping Bot! 📊</b>\n"
+            "I help you track your <b><i>income</i></b> and <b><i>expenses</i></b>. You can:\n\n"
+            "<b>1. Send transaction details:</b>\n"
+            "•  <code>/ai Spent 50 HKD on 7-11 today</code>\n"
+            "•  <code>/ai KFC 50</code>\n"
+            "\n"
+            "<b>2. Register or update your account:</b>\n"
+            "•  <b>/register</b>\n"
+            "\n"
+            "<b>3. View a monthly summary:</b>\n"
+            "•  <b>/monthlysummary</b> (coming soon!)\n"
+            "\n"
+            "<b>4. Get help anytime:</b>\n"
+            "•  <b>/help</b>\n"
+            "\n\n"
+            "If you're a first-time user, please use <b>/register</b> to set up your account.\n"
         )
         SendMessage(user_id, welcome_message)
 
@@ -55,12 +67,21 @@ class CommandManager:
         user_id = user_command_dict["user_id"]
 
         help_message = (
-            "<b>📖 How to Use the Bookkeeping Bot</b>\n\n"
-            "<b>1. Record a transaction</b>: Send a message like <code>Spent 100 HKD on KFC</code> or <code>Received 1000 HKD salary</code>.\n"
-            "<b>2. View categories</b>: Use <b>/listcategories</b> to see your income and expense categories.\n"
-            "<b>3. Get a summary</b>: Use <b>/summary</b> to view your total income and expenses.\n"
-            "<b>4. Need help?</b>: You're already here! Use <b>/help</b> anytime.\n\n"
-            "<i>Note: Ensure your categories exist in the database. Contact support if you need assistance.</i>"
+            "<b>📖 How to Use the Bookkeeping Bot</b>\n"
+            "\n\n"
+            "<b>1. Record a Transaction</b>:\n"
+            "•  Use <code>/ai [description]</code>: <code>/ai KFC 50</code> or <code>/ai Spent 100 HKD on KFC</code> to parse transactions with AI.\n"
+            "\n"
+            "<b>2. Register or Update Account</b>:\n"
+            "•  Use <b>/register</b> to set up or modify your username and default currency.\n"
+            "\n"
+            "<b>3. View Monthly Summary</b>:\n"
+            "•  Use <b>/monthlysummary</b> to view your total income and expenses (under development).\n"
+            "\n"
+            "<b>4. Need Help?</b>:\n"
+            "•  You're already here! Use <b>/help</b> anytime.\n"
+            "\n\n"
+            "<i>Note: Ensure your account is registered with /register before recording transactions. Contact support if you need assistance.</i>"
         )
         SendMessage(user_id, help_message)
 
@@ -72,7 +93,7 @@ class CommandManager:
 
         if command == user_input:
             guildline_message = (
-                "<b><code>/ai</code>Command Guideline for Users</b>\n"
+                "<b><code>/ai</code> Command Guideline for Users</b>\n"
                 "<b>Format:</b> <code>/ai [Income / Expense description]</code>\n"
                 "<b>Example:</b> <code>/ai KFC 50</code>\n"
                 "\n\n"
@@ -117,19 +138,19 @@ class CommandManager:
             keyboard_setting = {
                 "inline_keyboard": [
                     [
-                        {"text": "Change Date", "callback_data": "change_username"}
+                        {"text": "Change Date", "callback_data": "TRANSACTION_change_date"}
                     ],
                     [
-                        {"text": "Change Category Type", "callback_data": "change_username"}
+                        {"text": "Change Category Type", "callback_data": "TRANSACTION_category_type"}
                     ],
                     [
-                        {"text": "Change Description", "callback_data": "change_username"}
+                        {"text": "Change Description", "callback_data": "TRANSACTION_description"}
                     ],
                     [
-                        {"text": "Change Currency", "callback_data": "change_username"}
+                        {"text": "Change Currency", "callback_data": "TRANSACTION_currency"}
                     ],
                     [
-                        {"text": "Change Amount", "callback_data": "change_username"}
+                        {"text": "Change Amount", "callback_data": "TRANSACTION_amount"}
                     ]
                 ]
             }
@@ -149,8 +170,8 @@ class CommandManager:
         keyboard_setting = {
             "inline_keyboard": [
                 [
-                    {"text": "Change Username", "callback_data": "change_username"},
-                    {"text": "Change Currency", "callback_data": "change_currency"}
+                    {"text": "Change Username", "callback_data": "REGISTER_change_username"},
+                    {"text": "Change Currency", "callback_data": "REGISTER_change_currency"}
                 ]
             ]
         }
