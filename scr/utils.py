@@ -63,6 +63,19 @@ class SettingManager:
         self.user_id = user_id
         self.user_input = user_input
 
+    @staticmethod
+    def user_info_setting_keyboard(user_id, username_update_message):
+        keyboard_setting = {
+            "inline_keyboard": [
+                [
+                    {"text": "Change Username", "callback_data": "REGISTER_change_username"},
+                    {"text": "Change Currency", "callback_data": "REGISTER_change_currency"}
+                ]
+            ]
+        }
+
+        SendInlineKeyboardMessage(user_id, username_update_message, keyboard_setting)
+
     def username_update(self):
         new_username = self.user_input
         self.user_settings[self.user_id]["username"] = new_username
@@ -74,16 +87,7 @@ class SettingManager:
             f"Default Currency: {self.user_settings[self.user_id]['default_currency']}"
         )
 
-        keyboard_setting = {
-            "inline_keyboard": [
-                [
-                    {"text": "Change Username", "callback_data": "REGISTER_change_username"},
-                    {"text": "Change Currency", "callback_data": "REGISTER_change_currency"}
-                ]
-            ]
-        }
-
-        SendInlineKeyboardMessage(self.user_id, username_update_message, keyboard_setting)
+        SettingManager.user_info_setting_keyboard(self.user_id, username_update_message)
 
         user_info_update(
             user_id=self.user_id,
@@ -103,16 +107,7 @@ class SettingManager:
             f"Default Currency: {new_currency}"
         )
 
-        keyboard_setting = {
-            "inline_keyboard": [
-                [
-                    {"text": "Change Username", "callback_data": "REGISTER_change_username"},
-                    {"text": "Change Currency", "callback_data": "REGISTER_change_currency"}
-                ]
-            ]
-        }
-
-        SendInlineKeyboardMessage(self.user_id, currency_update_message, keyboard_setting)
+        SettingManager.user_info_setting_keyboard(self.user_id, currency_update_message)
 
         user_info_update(
             user_id=self.user_id,
@@ -120,3 +115,4 @@ class SettingManager:
         )
 
         return self.user_settings
+    

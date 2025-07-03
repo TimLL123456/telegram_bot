@@ -1,5 +1,6 @@
 from telegram_api import *
 from supabase_api import *
+from utils import *
 from flask import Response
 
 class CommandManager:
@@ -167,15 +168,7 @@ class CommandManager:
             f"Use the buttons below to update your settings:"
         )
 
-        keyboard_setting = {
-            "inline_keyboard": [
-                [
-                    {"text": "Change Username", "callback_data": "REGISTER_change_username"},
-                    {"text": "Change Currency", "callback_data": "REGISTER_change_currency"}
-                ]
-            ]
-        }
-        SendInlineKeyboardMessage(user_id, settings_message, keyboard_setting)
+        SettingManager.user_info_setting_keyboard(user_id, settings_message)
 
     def monthly_summary(self, user_command_dict: dict) -> None:
         """Handles the /monthlysummary command to welcome the user."""
