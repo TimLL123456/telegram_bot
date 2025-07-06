@@ -40,12 +40,14 @@ def user_settings_initialize(user_id: int, user_settings_dict: dict) -> dict:
         user_settings_dict[user_id] = {
             "username": user_setting_database["username"],
             "default_currency": user_setting_database["default_currency"],
+            "temp_transaction": None,
             "option": None
         }
     else:
         user_settings_dict[user_id] = {
             "username": None,
             "default_currency": None,
+            "temp_transaction": None,
             "option": None
         }
     
@@ -64,7 +66,7 @@ class SettingManager:
         self.user_input = user_input
 
     @staticmethod
-    def user_info_setting_keyboard(user_id, username_update_message):
+    def user_info_setting_keyboard(user_id, user_info_update_message):
         keyboard_setting = {
             "inline_keyboard": [
                 [
@@ -74,7 +76,31 @@ class SettingManager:
             ]
         }
 
-        SendInlineKeyboardMessage(user_id, username_update_message, keyboard_setting)
+        SendInlineKeyboardMessage(user_id, user_info_update_message, keyboard_setting)
+        
+    @staticmethod
+    def transaction_setting_keyboard(user_id, transaction_update_message):
+        keyboard_setting = {
+            "inline_keyboard": [
+                [
+                    {"text": "Change Date", "callback_data": "TRANSACTION_change_date"}
+                ],
+                [
+                    {"text": "Change Category Type", "callback_data": "TRANSACTION_category_type"}
+                ],
+                [
+                    {"text": "Change Description", "callback_data": "TRANSACTION_description"}
+                ],
+                [
+                    {"text": "Change Currency", "callback_data": "TRANSACTION_currency"}
+                ],
+                [
+                    {"text": "Change Amount", "callback_data": "TRANSACTION_amount"}
+                ]
+            ]
+        }
+
+        SendInlineKeyboardMessage(user_id, transaction_update_message, keyboard_setting)
 
     def username_update(self):
         new_username = self.user_input
@@ -98,7 +124,7 @@ class SettingManager:
     
     def currency_update(self):
         new_currency = self.user_input
-        self.user_settings[self.user_id]["default_currency"] = new_currency
+        self.user_settings[self.user_id]["currency"] = new_currency
         self.user_settings[self.user_id]["option"] = None
 
         currency_update_message = (
@@ -113,6 +139,21 @@ class SettingManager:
             user_id=self.user_id,
             currency=new_currency
         )
+
+        return self.user_settings
+    
+    def date_update(self):
+        new_date = self.user_input
+        self.user_settings[self.user_id]["temp_transaction"]["date"] = new_date
+        self.user_settings[self.user_id]["option"] = None
+
+        date_update_message = (
+            f"<b>⚙️ Settings Updated</b>\n\n"
+            f"Username: {self.user_settings[self.user_id]['username']}\n"
+            f"Updated date: {new_date}"
+        )
+
+        SettingManager.transaction_setting_keyboard(self.user_id, date_update_message)
 
         return self.user_settings
     

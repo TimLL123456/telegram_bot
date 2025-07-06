@@ -6,7 +6,6 @@ from utils import create_api_response, user_settings_initialize
 from command_manager import CommandManager
 from callback_manager import CallbackManager
 
-import json
 from flask import Flask, Response, request
 
 
@@ -152,6 +151,7 @@ def telegram():
         tg_user_id = tg_api_response_info["message"]["chat"]["id"]
         user_input = tg_api_response_info["message"]["text"]
         
+        # Temporary information store
         if tg_user_id not in user_settings:
             user_settings = user_settings_initialize(tg_user_id, user_settings)
 
@@ -163,12 +163,20 @@ def telegram():
             user_id=tg_user_id,
             user_input=user_input
         )
-        if update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'username':
+
+        print("-"*50)
+        print(user_settings)
+
+        if update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'REGISTER_username':
             user_settings = setting_manager.username_update()
             return Response(status=200)
         
-        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'currency':
+        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'REGISTER_currency':
             user_settings = setting_manager.currency_update()
+            return Response(status=200)
+        
+        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_date':
+            user_settings = setting_manager.date_update()
             return Response(status=200)
 
         ########################
@@ -181,10 +189,15 @@ def telegram():
             user_command_dict = {
                 "user_id": tg_user_id,
                 "command": command,
-                "user_input": user_transaction_input
+                "user_input": user_transaction_input,
+                "user_settings": user_settings
             }
 
-            command_manager.command_exec(user_command_dict=user_command_dict)
+            return_obj = command_manager.command_exec(user_command_dict=user_command_dict)
+
+            # Update user_settings dictionary if command data in returnable_list
+            if return_obj is not None:
+                user_settings = return_obj
 
             return Response(status=200)
 
@@ -200,7 +213,8 @@ def telegram():
             }
 
             return_obj = callback_manager.callback_exec(user_callback_dict=user_callback_dict)
-
+            
+            # Update user_settings dictionary if callback data in returnable_list
             if return_obj is not None:
                 user_settings = return_obj
 

@@ -27,15 +27,24 @@ class CommandManager:
             >>> user_command_dict = {
                     "user_id": 123456789,
                     "command": "/start",
-                    "user_input": "/start"
+                    "user_input": "/start",
                 }
             >>> CommandManager().command_exec(user_command_dict)
         """
+        returnable_list = [
+            "/ai"
+        ]
         user_id = user_command_dict["user_id"]
         command = user_command_dict["command"]
 
-        if command in self.commands:
+        if command in self.commands and command in returnable_list:
+            return_obj = self.commands[command](user_command_dict)
+            return return_obj
+
+        elif command in self.commands:
             self.commands[command](user_command_dict)
+            return None
+
         else:
             SendMessage(user_id, "Unknown command. Please use /help to see available commands.")
     
@@ -106,6 +115,9 @@ class CommandManager:
 
             return Response(status=200)
 
+        ########################
+        # LLM Transaction Parser
+        ########################
         # Send user input to the LLM for transaction parsing
         transaction_parser_llm_response = requests.post(
             url=f"http://127.0.0.1:5000/api/transaction_parser_llm",
@@ -120,6 +132,8 @@ class CommandManager:
             transaction_parser_llm_response_json = transaction_parser_llm_response.json()
             llm_response = transaction_parser_llm_response_json["data"]["llm_response"]
             transaction = transaction_parser_llm_response_json["data"]["transaction"]
+
+            self.user_settings[user_id]["temp_transaction"] = transaction
 
             # Insert the transaction into the Supabase database
             # transaction_insert(transaction)
@@ -156,6 +170,8 @@ class CommandManager:
                 ]
             }
             SendInlineKeyboardMessage(user_id, transaction_parse_result, keyboard_setting)
+
+        return self.user_settings
 
     def register(self, user_command_dict: dict) -> None:
         """Handles the /register command to welcome the user."""

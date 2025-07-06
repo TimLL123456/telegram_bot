@@ -30,21 +30,23 @@ class CallbackManager:
             >>> CallbackManager().callback_exec(user_callback_dict)
         """
         returnable_list = [
-            "REGISTER_change_username", "REGISTER_change_currency"
+            "REGISTER_change_username",
+            "REGISTER_change_currency",
+            "TRANSACTION_change_date",
+            "TRANSACTION_category_type",
+            "TRANSACTION_description",
+            "TRANSACTION_currency",
+            "TRANSACTION_amount"
         ]
         callback_data = user_callback_dict["callback_data"]
         
         if callback_data in self.callbacks:
-            return_obj = self.callbacks[callback_data](user_callback_dict)
-
-            if callback_data not in returnable_list:
-                return_obj = None
-        
-        return return_obj
+            return_obj = self.callbacks[callback_data](user_callback_dict) if callback_data in returnable_list else None
+            return return_obj
 
     def REGISTER_change_username(self, user_callback_dict: dict) -> None:
         user_id = user_callback_dict["user_id"]
-        self.user_settings[user_id]['option'] = 'username'
+        self.user_settings[user_id]['option'] = 'REGISTER_username'
 
         # Prompt user to change username
         change_username_message = (
@@ -57,7 +59,7 @@ class CallbackManager:
 
     def REGISTER_change_currency(self, user_callback_dict: dict) -> None:
         user_id = user_callback_dict["user_id"]
-        self.user_settings[user_id]['option'] = 'currency'
+        self.user_settings[user_id]['option'] = 'REGISTER_currency'
 
         # Prompt user to change currency
         change_currency_message = (
@@ -68,8 +70,19 @@ class CallbackManager:
 
         return self.user_settings
     
-    def TRANSACTION_change_date(self):
-        pass
+    def TRANSACTION_change_date(self, user_callback_dict: dict) -> None:
+        user_id = user_callback_dict["user_id"]
+        self.user_settings[user_id]['option'] = 'TRANSACTION_date'
+
+        # Prompt user to change currency
+        change_date_message = (
+            "<b>🔄 Change Date</b>\n\n"
+            "Please send me the correct date:"
+        )
+        SendMessage(user_id, change_date_message)
+
+        return self.user_settings
+    
 
     def TRANSACTION_category_type(self):
         pass
