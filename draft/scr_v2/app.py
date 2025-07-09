@@ -2,18 +2,26 @@ from llm_tools import TransactionExtractorLLM
 from telegram_api import *
 from supabase_api import *
 from utils import *
-from utils import create_api_response, user_settings_initialize
 from command_manager import CommandManager
 from callback_manager import CallbackManager
 
+
+import logging
 from flask import Flask, Response, request
 
+setup_logger()
 
 app = Flask(__name__)
+logger = logging.getLogger('flask_app')
+
+logger.info("Starting app ...")
 
 # Fetch current user settings
 user_settings = {}
 extractor_llm = TransactionExtractorLLM(model_name="deepseek-chat", temperature=0.0)
+
+logger.debug(f"user_setting: {user_settings}")
+logger.info("Setting TransactionExtractorLLM ...")
 
 
 @app.route('/api/transaction_parser_llm', methods=['POST'])
@@ -45,12 +53,15 @@ def transaction_parser_llm():
     """
     # Handle the incoming POST request from Telegram
     if request.method == 'POST':
+        logger.info("Incoming request: /api/transaction_parser_llm ...")
 
         # Retrieve and validate JSON payload (user ID and user input) from the request JSON
         transaction_data = request.get_json()
+        logger.info(f"transaction_data: {transaction_data} ...")
 
         # Check if the JSON payload contains the required fields
         if (not transaction_data) or ("user_id" not in transaction_data) or ("user_input" not in transaction_data):
+            logger.error("INVALID_REQUEST")
             return create_api_response(
                 status="error",
                 message="Please provide 'user_id' and 'user_input' in the request body",
@@ -66,6 +77,7 @@ def transaction_parser_llm():
 
         # Check if the user ID is valid and registered in the database
         if get_user_info(user_id) is None:
+            logger.error("USER_NOT_FOUND")
             return create_api_response(
                 status="error",
                 message="user_id not found in the database. Please register first",
@@ -81,6 +93,7 @@ def transaction_parser_llm():
 
         # Check if the LLM response indicates a transaction
         if llm_response["is_transaction"] is False:
+            logger.error("INVALID_TRANSACTION")
             return create_api_response(
                 status="error",
                 message="The input does not contain a valid transaction",
@@ -96,6 +109,7 @@ def transaction_parser_llm():
 
         # Check if the category ID is found
         if category_id is None:
+            logger.error("CATEGORY_NOT_FOUND")
             return create_api_response(
                 status="error",
                 message="Category not found in the database",
@@ -117,6 +131,7 @@ def transaction_parser_llm():
         }
 
         # Return success response with transaction and LLM response
+        logger.info("Request Success ...")
         return create_api_response(
             status="success",
             message="Transaction processed successfully",
@@ -132,6 +147,7 @@ def transaction_parser_llm():
 def telegram():
     # Handle the incoming POST request from Telegram
     if request.method == 'POST':
+        logger.info("Incoming request: / ...")
 
         global user_settings
 
@@ -154,6 +170,7 @@ def telegram():
         # Temporary information store
         if tg_user_id not in user_settings:
             user_settings = user_settings_initialize(tg_user_id, user_settings)
+            logger.info(f"user_settings init: {user_settings} ...")
 
         ###########################
         # User Info Default Setting
@@ -163,9 +180,6 @@ def telegram():
             user_id=tg_user_id,
             user_input=user_input
         )
-
-        print("-"*50)
-        print(user_settings)
 
         if update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'REGISTER_username':
             user_settings = setting_manager.username_update()
@@ -178,6 +192,8 @@ def telegram():
         elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_date':
             user_settings = setting_manager.date_update()
             return Response(status=200)
+        
+        logger.info(f"user_settings: {user_settings} ...")
 
         ########################
         # Handle command queries

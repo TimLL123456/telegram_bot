@@ -84,14 +84,54 @@ class CallbackManager:
         return self.user_settings
     
 
-    def TRANSACTION_category_type(self):
-        pass
+    def TRANSACTION_category_type(self, user_callback_dict: dict) -> None:
+        user_id = user_callback_dict["user_id"]
+        self.user_settings[user_id]['option'] = 'TRANSACTION_category_type'
 
-    def TRANSACTION_description(self):
-        pass
+        # Prompt user to change currency
+        change_category_type_message = (
+            "<b>🔄 Change Category Type</b>\n\n"
+            "Please send me the correct category type:"
+        )
+        SendMessage(user_id, change_category_type_message)
 
-    def TRANSACTION_currency(self):
-        pass
+        return self.user_settings
 
-    def TRANSACTION_amount(self):
-        pass
+    def TRANSACTION_description(self, user_callback_dict: dict) -> None:
+        user_id = user_callback_dict["user_id"]
+        self.user_settings[user_id]['option'] = 'TRANSACTION_description'
+
+        # Prompt user to change currency
+        change_description_message = (
+            "<b>🔄 Change Description</b>\n\n"
+            "Please send me the correct description:"
+        )
+        SendMessage(user_id, change_description_message)
+
+        return self.user_settings
+
+    def TRANSACTION_currency(self, user_callback_dict: dict) -> None:
+        user_id = user_callback_dict["user_id"]
+        self.user_settings[user_id]['option'] = 'TRANSACTION_currency'
+
+        # Prompt user to change currency
+        change_currency_message = (
+            "<b>🔄 Change Currency</b>\n\n"
+            "Please send me the correct currency:"
+        )
+        SendMessage(user_id, change_currency_message)
+
+        return self.user_settings
+
+    def TRANSACTION_amount(self, user_callback_dict: dict) -> None:
+        user_id = user_callback_dict["user_id"]
+        self.user_settings[user_id]['option'] = 'TRANSACTION_amount'
+
+        # Prompt user to change currency
+        change_amount_message = (
+            "<b>🔄 Change Amount</b>\n\n"
+            "Please send me the correct amount:"
+        )
+        SendMessage(user_id, change_amount_message)
+
+        return self.user_settings

@@ -1,8 +1,15 @@
 import json
-from flask import Response
+import yaml
+import logging
+import logging.config
 
 from telegram_api import *
 from supabase_api import *
+
+def setup_logger():
+    with open("logging_config.yml", 'rt') as f:
+        config = yaml.safe_load(f.read())
+    logging.config.dictConfig(config)
 
 def create_api_response(
     status: str,
@@ -156,4 +163,3 @@ class SettingManager:
         SettingManager.transaction_setting_keyboard(self.user_id, date_update_message)
 
         return self.user_settings
-    
