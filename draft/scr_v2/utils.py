@@ -1,7 +1,7 @@
 import json
-import yaml
 import logging
 import functools
+from dateutil import parser
 
 from telegram_api import *
 from supabase_api import *
@@ -27,7 +27,7 @@ def logger_setup(
     console_handler.setFormatter(console_formatter)
 
     # Create rotating file handler
-    file_handler = logging.FileHandler(logger_filename)
+    file_handler = logging.FileHandler(logger_filename, encoding='utf-8')
     file_handler.setLevel(logging.DEBUG)
     file_formatter = logging.Formatter(log_file_format)
     file_handler.setFormatter(file_formatter)
@@ -45,6 +45,19 @@ def log_function(logger:logging):
             logger.debug(f"Entering function '{func.__name__}' with args={args}, kwargs={kwargs}")
             result = func(*args, **kwargs)
             logger.debug(f"Exiting function '{func.__name__}' with result={result}")
+            return result
+        return wrapper
+    return decorator
+
+def log_api(logger:logging):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            logger.info("="*100)
+            logger.debug(f"Entering function '{func.__name__}' with args={args}, kwargs={kwargs}")
+            result = func(*args, **kwargs)
+            logger.debug(f"Exiting function '{func.__name__}' with result={result}")
+            logger.info("="*100)
             return result
         return wrapper
     return decorator
@@ -99,6 +112,21 @@ def user_settings_initialize(user_id: int, user_settings_dict: dict) -> dict:
         }
     
     return user_settings_dict
+
+@log_function(logger)
+def stardardize_date(date_input:str):
+    try:
+        # Parse the input date string
+        parsed_date = parser.parse(date_input)
+
+        # Format to YYYY-MM-DD
+        return parsed_date.strftime("%Y-%m-%d")
+    
+    except ValueError:
+        return None
+
+############################################################################################################
+############################################################################################################
 
 @log_function(logger)
 class SettingManager:
@@ -201,6 +229,12 @@ class SettingManager:
     @log_function(logger)
     def trans_date_update(self):
         new_date = self.user_input
+        new_date = stardardize_date(new_date)
+
+        if new_date is None:
+            SendMessage(self.user_id, f"Cannot identify the date format ({self.user_input}). Please input again!")
+            return self.user_settings
+
         self.user_settings[self.user_id]["temp_transaction"]["date"] = new_date
         self.user_settings[self.user_id]["option"] = None
 

@@ -46,13 +46,16 @@ class CallbackManager:
             "TRANSACTION_category_name",
             "TRANSACTION_description",
             "TRANSACTION_currency",
-            "TRANSACTION_amount"
+            "TRANSACTION_amount",
+            "TRANSACTION_save"
         ]
         callback_data = user_callback_dict["callback_data"]
         
         if callback_data in self.callbacks:
-            return_obj = self.callbacks[callback_data](user_callback_dict) if callback_data in returnable_list else None
-            return return_obj
+            return_obj = self.callbacks[callback_data](user_callback_dict)
+
+            return return_obj if (callback_data in returnable_list) or (return_obj is not None) else None
+
     
     @log_function(logger)
     def REGISTER_change_username(self, user_callback_dict: dict) -> None:
@@ -84,13 +87,24 @@ class CallbackManager:
     
     @log_function(logger)
     def TRANSACTION_change_date(self, user_callback_dict: dict) -> None:
+        temp_transaction = user_callback_dict["temp_transaction"]
+        if temp_transaction is None:
+            return None
+
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'TRANSACTION_date'
 
         # Prompt user to change currency
         change_date_message = (
             "<b>🔄 Change Date</b>\n\n"
-            "Please send me the correct date:"
+            "Please send me the correct date in the format shown in the examples below:\n"
+            "✅️ 2023/10/01\n"
+            "✅️ 10-01-2023\n"
+            "✅️ October 1, 2023\n"
+            "✅️ 01 Oct 2023\n"
+            "✅️ 2023.10.01\n"
+            "✅️ 20250601\n"
+            "❌ invalid_date"
         )
         SendMessage(user_id, change_date_message)
 
@@ -98,6 +112,10 @@ class CallbackManager:
     
     @log_function(logger)
     def TRANSACTION_category_type(self, user_callback_dict: dict) -> None:
+        temp_transaction = user_callback_dict["temp_transaction"]
+        if temp_transaction is None:
+            return None
+
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'TRANSACTION_category_type'
 
@@ -112,6 +130,10 @@ class CallbackManager:
 
     @log_function(logger)
     def TRANSACTION_category_name(self, user_callback_dict: dict) -> None:
+        temp_transaction = user_callback_dict["temp_transaction"]
+        if temp_transaction is None:
+            return None
+        
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'TRANSACTION_category_name'
 
@@ -126,6 +148,10 @@ class CallbackManager:
 
     @log_function(logger)
     def TRANSACTION_description(self, user_callback_dict: dict) -> None:
+        temp_transaction = user_callback_dict["temp_transaction"]
+        if temp_transaction is None:
+            return None
+
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'TRANSACTION_description'
 
@@ -140,6 +166,10 @@ class CallbackManager:
 
     @log_function(logger)
     def TRANSACTION_currency(self, user_callback_dict: dict) -> None:
+        temp_transaction = user_callback_dict["temp_transaction"]
+        if temp_transaction is None:
+            return None
+        
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'TRANSACTION_currency'
 
@@ -154,6 +184,10 @@ class CallbackManager:
 
     @log_function(logger)
     def TRANSACTION_amount(self, user_callback_dict: dict) -> None:
+        temp_transaction = user_callback_dict["temp_transaction"]
+        if temp_transaction is None:
+            return None
+
         user_id = user_callback_dict["user_id"]
         self.user_settings[user_id]['option'] = 'TRANSACTION_amount'
 
@@ -168,13 +202,20 @@ class CallbackManager:
 
     @log_function(logger)
     def TRANSACTION_save(self, user_callback_dict: dict) -> None:
+        user_id = user_callback_dict["user_id"]
+
+        temp_transaction = user_callback_dict["temp_transaction"]
+        if temp_transaction is None:
+            return None
+
+        self.user_settings[user_id]["temp_transaction"] = None
 
         # Prompt user to change currency
-        change_amount_message = (
+        save_message = (
             "Transaction have been saved!"
             "\n\n"
             "You may click <b>/start</b> or <b>/help</b> to get more information."
         )
-        SendMessage(user_id, change_amount_message)
+        SendMessage(user_id, save_message)
 
-
+        return self.user_settings

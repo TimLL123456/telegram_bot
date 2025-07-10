@@ -38,7 +38,8 @@ class CommandManager:
             >>> CommandManager().command_exec(user_command_dict)
         """
         returnable_list = [
-            "/ai"
+            "/ai",
+            "/reset"
         ]
         user_id = user_command_dict["user_id"]
         command = user_command_dict["command"]
@@ -110,6 +111,7 @@ class CommandManager:
         command = user_command_dict["command"]
         user_input = user_command_dict["user_input"]
 
+        # If user_input ("/ai") == command ("/ai")
         if command == user_input:
             guildline_message = (
                 "<b><code>/ai</code> Command Guideline for Users</b>\n"
@@ -123,6 +125,8 @@ class CommandManager:
             SendMessage(user_id, guildline_message)
 
             return Response(status=200)
+        
+        SendMessage(user_id, "𝐍𝐨𝐰 𝐥𝐨𝐚𝐝𝐢𝐧𝐠. . .")
 
         ########################
         # LLM Transaction Parser

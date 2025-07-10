@@ -14,7 +14,6 @@ app = Flask(__name__)
 logger = logger_setup(logger_name="flask_app", logger_filename="app.log")
 logger = logging.getLogger(f'flask_app.{__name__}')
 
-logger.info("="*100)
 
 # Fetch current user settings
 user_settings = {}
@@ -22,7 +21,7 @@ extractor_llm = TransactionExtractorLLM(model_name="deepseek-chat", temperature=
 
 
 @app.route('/api/transaction_parser_llm', methods=['POST'])
-@log_function(logger)
+@log_api(logger)
 def transaction_parser_llm():
     """
     Endpoint to parse transaction details using the LLM.
@@ -85,7 +84,9 @@ def transaction_parser_llm():
             )
 
         # Extracts bookkeeping features by LLM
-        llm_response = extractor_llm.extract_bookkeeping_features(user_input=user_input, user_id=user_id)
+        # llm_response = extractor_llm.extract_bookkeeping_features(user_input=user_input, user_id=user_id)
+        logger.debug("Saving money: fixed ouput")
+        llm_response = {'is_transaction': True, 'date': '2025-07-10', 'category_type': 'Expense', 'category_name': 'Food', 'description': 'KFC', 'currency': 'HKD', 'price': 50.0}
 
         # Check if the LLM response indicates a transaction
         if llm_response["is_transaction"] is False:
@@ -140,8 +141,9 @@ def transaction_parser_llm():
 
 
 @app.route('/', methods=['POST'])
-@log_function(logger)
+@log_api(logger)
 def telegram():
+
     # Handle the incoming POST request from Telegram
     if request.method == 'POST':
 
@@ -164,11 +166,13 @@ def telegram():
         # Retrieve the `user ID` & `user text input` from telegram chatroom api response
         tg_user_id = tg_api_response_info["message"]["chat"]["id"]
         user_input = tg_api_response_info["message"]["text"]
+        logger.debug(f"user_input: {user_input}")
         
         # Temporary information store
         if tg_user_id not in user_settings:
             user_settings = user_settings_initialize(tg_user_id, user_settings)
-            logger.info(f"user_settings init: {user_settings} ...")
+            logger.info(f"user_settings init: {user_settings}")
+
 
         ###########################
         # User Info Default Setting
@@ -212,12 +216,13 @@ def telegram():
             return Response(status=200)
 
         
-        logger.info(f"user_settings: {user_settings} ...")
+        logger.info(f"user_settings: {user_settings}")
 
         ########################
         # Handle command queries
         ########################
         if user_input.startswith('/'):
+
             command = user_input.split(maxsplit=1)[0].lower()
             user_transaction_input = user_input.split(maxsplit=1)[-1]
 
@@ -244,6 +249,7 @@ def telegram():
 
             user_callback_dict = {
                 "user_id": tg_user_id,
+                "temp_transaction": user_settings[tg_user_id]["temp_transaction"],
                 "callback_data": callback_data
             }
 
