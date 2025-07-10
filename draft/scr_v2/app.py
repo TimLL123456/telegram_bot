@@ -9,22 +9,20 @@ from callback_manager import CallbackManager
 import logging
 from flask import Flask, Response, request
 
-setup_logger()
 
 app = Flask(__name__)
-logger = logging.getLogger('flask_app')
+logger = logger_setup(logger_name="flask_app", logger_filename="app.log")
+logger = logging.getLogger(f'flask_app.{__name__}')
 
-logger.info("Starting app ...")
+logger.info("="*100)
 
 # Fetch current user settings
 user_settings = {}
 extractor_llm = TransactionExtractorLLM(model_name="deepseek-chat", temperature=0.0)
 
-logger.debug(f"user_setting: {user_settings}")
-logger.info("Setting TransactionExtractorLLM ...")
-
 
 @app.route('/api/transaction_parser_llm', methods=['POST'])
+@log_function(logger)
 def transaction_parser_llm():
     """
     Endpoint to parse transaction details using the LLM.
@@ -53,11 +51,9 @@ def transaction_parser_llm():
     """
     # Handle the incoming POST request from Telegram
     if request.method == 'POST':
-        logger.info("Incoming request: /api/transaction_parser_llm ...")
 
         # Retrieve and validate JSON payload (user ID and user input) from the request JSON
         transaction_data = request.get_json()
-        logger.info(f"transaction_data: {transaction_data} ...")
 
         # Check if the JSON payload contains the required fields
         if (not transaction_data) or ("user_id" not in transaction_data) or ("user_input" not in transaction_data):
@@ -144,12 +140,13 @@ def transaction_parser_llm():
 
 
 @app.route('/', methods=['POST'])
+@log_function(logger)
 def telegram():
     # Handle the incoming POST request from Telegram
     if request.method == 'POST':
-        logger.info("Incoming request: / ...")
 
         global user_settings
+        logger.debug(f"user_settings: {user_settings}")
 
         ##################################
         # Set Command and Callback Manager
@@ -162,6 +159,7 @@ def telegram():
         ##################################
         tg_api_response = request.get_json() # Retrieve telegram api response json
         update_type, tg_api_response_info = parse_tg_api_respnse_info(tg_api_response)
+        logger.debug(f"tg_api_response: {tg_api_response}")
 
         # Retrieve the `user ID` & `user text input` from telegram chatroom api response
         tg_user_id = tg_api_response_info["message"]["chat"]["id"]
@@ -190,8 +188,29 @@ def telegram():
             return Response(status=200)
         
         elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_date':
-            user_settings = setting_manager.date_update()
+            user_settings = setting_manager.trans_date_update()
             return Response(status=200)
+
+        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_category_type':
+            user_settings = setting_manager.trans_category_type_update()
+            return Response(status=200)
+
+        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_category_name':
+            user_settings = setting_manager.trans_category_name_update()
+            return Response(status=200)
+
+        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_description':
+            user_settings = setting_manager.trans_description_update()
+            return Response(status=200)
+
+        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_currency':
+            user_settings = setting_manager.trans_currency_update()
+            return Response(status=200)
+
+        elif update_type in ["message", "edited_message"] and user_settings[tg_user_id].get('option') == 'TRANSACTION_amount':
+            user_settings = setting_manager.trans_amount_update()
+            return Response(status=200)
+
         
         logger.info(f"user_settings: {user_settings} ...")
 

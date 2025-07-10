@@ -1,14 +1,18 @@
 import os
 import config
+import logging
 from pathlib import Path
 from datetime import date
+from typing import Optional
+from pydantic import BaseModel, Field
 from langchain_perplexity import ChatPerplexity
 from langchain_deepseek import ChatDeepSeek
 from langchain_core.prompts import ChatPromptTemplate
+
+from utils import *
 from supabase_api import *
 
-from typing import Optional
-from pydantic import BaseModel, Field
+logger = logging.getLogger(f'flask_app.{__name__}')
 
 class TransactionData(BaseModel):
     """Feature formatter to extract features from user text. If the text is not a transaction, set is_transaction to False."""
@@ -21,6 +25,7 @@ class TransactionData(BaseModel):
     currency: Optional[str] = Field("HKD", description="The currency of the transaction (e.g., USD, HKD, TWD). Should be None if not a transaction.")
     price: Optional[float] = Field(description="Price of the transaction (must be a number). Should be None if not a transaction.")
 
+@log_function(logger)
 class TransactionExtractorLLM:
     """A class to interact with the Perplexity LLM for transaction data extraction."""
 
@@ -56,7 +61,7 @@ class TransactionExtractorLLM:
 
         return prompt
 
-
+    @log_function(logger)
     def extract_bookkeeping_features(self, user_input: str, user_id: int) -> dict:
         """
         Extracts bookkeeping features by LLM to generate structured output.

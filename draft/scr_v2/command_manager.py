@@ -1,8 +1,13 @@
+import logging
+from flask import Response
+
 from telegram_api import *
 from supabase_api import *
 from utils import *
-from flask import Response
 
+logger = logging.getLogger(f'flask_app.{__name__}')
+
+@log_function(logger)
 class CommandManager:
 
     def __init__(self, user_settings: dict):
@@ -16,6 +21,7 @@ class CommandManager:
             '/monthlysummary': self.monthly_summary
         }
 
+    @log_function(logger)
     def command_exec(self, user_command_dict: dict) -> None:
         """
         Executes the command based on user input.
@@ -48,6 +54,7 @@ class CommandManager:
         else:
             SendMessage(user_id, "Unknown command. Please use /help to see available commands.")
     
+    @log_function(logger)
     def start(self, user_command_dict: dict) -> None:
         """Handles the /start command to welcome the user."""
         user_id = user_command_dict["user_id"]
@@ -72,6 +79,7 @@ class CommandManager:
         )
         SendMessage(user_id, welcome_message)
 
+    @log_function(logger)
     def help(self, user_command_dict: dict) -> None:
         """Handles the /help command to welcome the user."""
         user_id = user_command_dict["user_id"]
@@ -95,6 +103,7 @@ class CommandManager:
         )
         SendMessage(user_id, help_message)
 
+    @log_function(logger)
     def transaction_parser_llm(self, user_command_dict: dict) -> None:
         """Handles the /ai command to parse transactions using LLM."""
         user_id = user_command_dict["user_id"]
@@ -132,6 +141,8 @@ class CommandManager:
             transaction_parser_llm_response_json = transaction_parser_llm_response.json()
             llm_response = transaction_parser_llm_response_json["data"]["llm_response"]
             transaction = transaction_parser_llm_response_json["data"]["transaction"]
+            transaction["category_type"] = llm_response['category_type']
+            transaction["category_name"] = llm_response['category_name']
 
             self.user_settings[user_id]["temp_transaction"] = transaction
 
@@ -145,6 +156,7 @@ class CommandManager:
                 f"<b>Date:</b> <code>{transaction['date']}</code>\n"
                 f"<b>Category ID:</b> <code>{transaction['category_id']}</code>\n"
                 f"<b>Category Type:</b> <code>{llm_response['category_type']}</code>\n"
+                f"<b>Category Name:</b> <code>{llm_response['category_name']}</code>\n"
                 f"<b>Description:</b> <code>{transaction['description']}</code>\n"
                 f"<b>Currency:</b> <code>{transaction['currency']}</code>\n"
                 f"<b>Amount:</b> <code>{transaction['amount']}</code>"
@@ -159,6 +171,9 @@ class CommandManager:
                         {"text": "Change Category Type", "callback_data": "TRANSACTION_category_type"}
                     ],
                     [
+                        {"text": "Change Category Name", "callback_data": "TRANSACTION_category_name"}
+                    ],
+                    [
                         {"text": "Change Description", "callback_data": "TRANSACTION_description"}
                     ],
                     [
@@ -166,26 +181,31 @@ class CommandManager:
                     ],
                     [
                         {"text": "Change Amount", "callback_data": "TRANSACTION_amount"}
+                    ],
+                    [
+                        {"text": "Save", "callback_data": "TRANSACTION_save"}
                     ]
                 ]
             }
             SendInlineKeyboardMessage(user_id, transaction_parse_result, keyboard_setting)
 
         return self.user_settings
-
+    
+    @log_function(logger)
     def register(self, user_command_dict: dict) -> None:
         """Handles the /register command to welcome the user."""
         user_id = user_command_dict["user_id"]
 
         settings_message = (
             f"<b>⚙️ Your Settings</b>\n\n"
-            f"Username: {self.user_settings[user_id]["username"]}\n"
-            f"Default Currency: {self.user_settings[user_id]["default_currency"]}\n\n"
+            f"Username: {self.user_settings[user_id]['username']}\n"
+            f"Default Currency: {self.user_settings[user_id]['default_currency']}\n\n"
             f"Use the buttons below to update your settings:"
         )
 
         SettingManager.user_info_setting_keyboard(user_id, settings_message)
 
+    @log_function(logger)
     def monthly_summary(self, user_command_dict: dict) -> None:
         """Handles the /monthlysummary command to welcome the user."""
         user_id = user_command_dict["user_id"]

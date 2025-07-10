@@ -1,16 +1,55 @@
 import json
 import yaml
 import logging
-import logging.config
+import functools
 
 from telegram_api import *
 from supabase_api import *
 
-def setup_logger():
-    with open("logging_config.yml", 'rt') as f:
-        config = yaml.safe_load(f.read())
-    logging.config.dictConfig(config)
+logger = logging.getLogger(f'flask_app.{__name__}')
 
+def logger_setup(
+    logger_name:str,
+    logger_filename:str,
+    log_console_format:str = '%(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+    log_file_format:str = '%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s',
+):
+    # Create logger
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)
+    logger.handlers.clear()
+    logger.propagate = False
+
+    # Create console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter(log_console_format)
+    console_handler.setFormatter(console_formatter)
+
+    # Create rotating file handler
+    file_handler = logging.FileHandler(logger_filename)
+    file_handler.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter(log_file_format)
+    file_handler.setFormatter(file_formatter)
+
+    # Add handlers
+    logger.addHandler(console_handler)
+    logger.addHandler(file_handler)
+
+    return logger
+
+def log_function(logger:logging):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            logger.debug(f"Entering function '{func.__name__}' with args={args}, kwargs={kwargs}")
+            result = func(*args, **kwargs)
+            logger.debug(f"Exiting function '{func.__name__}' with result={result}")
+            return result
+        return wrapper
+    return decorator
+
+@log_function(logger)
 def create_api_response(
     status: str,
     message: str,
@@ -40,6 +79,7 @@ def create_api_response(
 
     return json.dumps(response), http_status
 
+@log_function(logger)
 def user_settings_initialize(user_id: int, user_settings_dict: dict) -> dict:
     """Initialize user settings for a new user."""
     user_setting_database = get_user_info(user_id)
@@ -60,6 +100,7 @@ def user_settings_initialize(user_id: int, user_settings_dict: dict) -> dict:
     
     return user_settings_dict
 
+@log_function(logger)
 class SettingManager:
 
     def __init__(
@@ -96,6 +137,9 @@ class SettingManager:
                     {"text": "Change Category Type", "callback_data": "TRANSACTION_category_type"}
                 ],
                 [
+                    {"text": "Change Category Name", "callback_data": "TRANSACTION_category_name"}
+                ],
+                [
                     {"text": "Change Description", "callback_data": "TRANSACTION_description"}
                 ],
                 [
@@ -103,12 +147,16 @@ class SettingManager:
                 ],
                 [
                     {"text": "Change Amount", "callback_data": "TRANSACTION_amount"}
+                ],
+                [
+                    {"text": "Save", "callback_data": "TRANSACTION_save"}
                 ]
             ]
         }
 
         SendInlineKeyboardMessage(user_id, transaction_update_message, keyboard_setting)
 
+    @log_function(logger)
     def username_update(self):
         new_username = self.user_input
         self.user_settings[self.user_id]["username"] = new_username
@@ -129,6 +177,7 @@ class SettingManager:
 
         return self.user_settings
     
+    @log_function(logger)
     def currency_update(self):
         new_currency = self.user_input
         self.user_settings[self.user_id]["currency"] = new_currency
@@ -148,18 +197,141 @@ class SettingManager:
         )
 
         return self.user_settings
-    
-    def date_update(self):
+
+    @log_function(logger)
+    def trans_date_update(self):
         new_date = self.user_input
         self.user_settings[self.user_id]["temp_transaction"]["date"] = new_date
         self.user_settings[self.user_id]["option"] = None
 
+        temp_transaction = self.user_settings[self.user_id]["temp_transaction"]
+
         date_update_message = (
-            f"<b>⚙️ Settings Updated</b>\n\n"
-            f"Username: {self.user_settings[self.user_id]['username']}\n"
-            f"Updated date: {new_date}"
+            f"<b>⚙️ Updated Transaction Result:</b>\n\n"
+            f"<b>User ID:</b> <code>{temp_transaction['user_id']}</code>\n"
+            f"<b>Date:</b> <code>{temp_transaction['date']}</code>\n"
+            f"<b>Category Type:</b> <code>{temp_transaction['category_type']}</code>\n"
+            f"<b>Category Name:</b> <code>{temp_transaction['category_name']}</code>\n"
+            f"<b>Description:</b> <code>{temp_transaction['description']}</code>\n"
+            f"<b>Currency:</b> <code>{temp_transaction['currency']}</code>\n"
+            f"<b>Amount:</b> <code>{temp_transaction['amount']}</code>"
         )
 
         SettingManager.transaction_setting_keyboard(self.user_id, date_update_message)
+
+        return self.user_settings
+
+    @log_function(logger)
+    def trans_category_type_update(self):
+        new_category_type = self.user_input
+        self.user_settings[self.user_id]["temp_transaction"]["category_type"] = new_category_type
+        self.user_settings[self.user_id]["option"] = None
+
+        temp_transaction = self.user_settings[self.user_id]["temp_transaction"]
+
+        category_type_update_message = (
+            f"<b>⚙️ Updated Transaction Result:</b>\n\n"
+            f"<b>User ID:</b> <code>{temp_transaction['user_id']}</code>\n"
+            f"<b>Date:</b> <code>{temp_transaction['date']}</code>\n"
+            f"<b>Category Type:</b> <code>{temp_transaction['category_type']}</code>\n"
+            f"<b>Category Name:</b> <code>{temp_transaction['category_name']}</code>\n"
+            f"<b>Description:</b> <code>{temp_transaction['description']}</code>\n"
+            f"<b>Currency:</b> <code>{temp_transaction['currency']}</code>\n"
+            f"<b>Amount:</b> <code>{temp_transaction['amount']}</code>"
+        )
+
+        SettingManager.transaction_setting_keyboard(self.user_id, category_type_update_message)
+
+        return self.user_settings
+
+    @log_function(logger)
+    def trans_category_name_update(self):
+        new_category_name = self.user_input
+        self.user_settings[self.user_id]["temp_transaction"]["category_name"] = new_category_name
+        self.user_settings[self.user_id]["option"] = None
+
+        temp_transaction = self.user_settings[self.user_id]["temp_transaction"]
+
+        category_name_update_message = (
+            f"<b>⚙️ Updated Transaction Result:</b>\n\n"
+            f"<b>User ID:</b> <code>{temp_transaction['user_id']}</code>\n"
+            f"<b>Date:</b> <code>{temp_transaction['date']}</code>\n"
+            f"<b>Category Type:</b> <code>{temp_transaction['category_type']}</code>\n"
+            f"<b>Category Name:</b> <code>{temp_transaction['category_name']}</code>\n"
+            f"<b>Description:</b> <code>{temp_transaction['description']}</code>\n"
+            f"<b>Currency:</b> <code>{temp_transaction['currency']}</code>\n"
+            f"<b>Amount:</b> <code>{temp_transaction['amount']}</code>"
+        )
+
+        SettingManager.transaction_setting_keyboard(self.user_id, category_name_update_message)
+
+        return self.user_settings
+
+    @log_function(logger)
+    def trans_description_update(self):
+        new_description = self.user_input
+        self.user_settings[self.user_id]["temp_transaction"]["description"] = new_description
+        self.user_settings[self.user_id]["option"] = None
+
+        temp_transaction = self.user_settings[self.user_id]["temp_transaction"]
+
+        description_update_message = (
+            f"<b>⚙️ Updated Transaction Result:</b>\n\n"
+            f"<b>User ID:</b> <code>{temp_transaction['user_id']}</code>\n"
+            f"<b>Date:</b> <code>{temp_transaction['date']}</code>\n"
+            f"<b>Category Type:</b> <code>{temp_transaction['category_type']}</code>\n"
+            f"<b>Category Name:</b> <code>{temp_transaction['category_name']}</code>\n"
+            f"<b>Description:</b> <code>{temp_transaction['description']}</code>\n"
+            f"<b>Currency:</b> <code>{temp_transaction['currency']}</code>\n"
+            f"<b>Amount:</b> <code>{temp_transaction['amount']}</code>"
+        )
+
+        SettingManager.transaction_setting_keyboard(self.user_id, description_update_message)
+
+        return self.user_settings
+
+    @log_function(logger)
+    def trans_currency_update(self):
+        new_currency = self.user_input
+        self.user_settings[self.user_id]["temp_transaction"]["currency"] = new_currency
+        self.user_settings[self.user_id]["option"] = None
+
+        temp_transaction = self.user_settings[self.user_id]["temp_transaction"]
+
+        currency_update_message = (
+            f"<b>⚙️ Updated Transaction Result:</b>\n\n"
+            f"<b>User ID:</b> <code>{temp_transaction['user_id']}</code>\n"
+            f"<b>Date:</b> <code>{temp_transaction['date']}</code>\n"
+            f"<b>Category Type:</b> <code>{temp_transaction['category_type']}</code>\n"
+            f"<b>Category Name:</b> <code>{temp_transaction['category_name']}</code>\n"
+            f"<b>Description:</b> <code>{temp_transaction['description']}</code>\n"
+            f"<b>Currency:</b> <code>{temp_transaction['currency']}</code>\n"
+            f"<b>Amount:</b> <code>{temp_transaction['amount']}</code>"
+        )
+
+        SettingManager.transaction_setting_keyboard(self.user_id, currency_update_message)
+
+        return self.user_settings
+
+    @log_function(logger)
+    def trans_amount_update(self):
+        new_amount = self.user_input
+        self.user_settings[self.user_id]["temp_transaction"]["amount"] = new_amount
+        self.user_settings[self.user_id]["option"] = None
+
+        temp_transaction = self.user_settings[self.user_id]["temp_transaction"]
+
+        amount_update_message = (
+            f"<b>⚙️ Updated Transaction Result:</b>\n\n"
+            f"<b>User ID:</b> <code>{temp_transaction['user_id']}</code>\n"
+            f"<b>Date:</b> <code>{temp_transaction['date']}</code>\n"
+            f"<b>Category Type:</b> <code>{temp_transaction['category_type']}</code>\n"
+            f"<b>Category Name:</b> <code>{temp_transaction['category_name']}</code>\n"
+            f"<b>Description:</b> <code>{temp_transaction['description']}</code>\n"
+            f"<b>Currency:</b> <code>{temp_transaction['currency']}</code>\n"
+            f"<b>Amount:</b> <code>{temp_transaction['amount']}</code>"
+        )
+
+        SettingManager.transaction_setting_keyboard(self.user_id, amount_update_message)
 
         return self.user_settings
