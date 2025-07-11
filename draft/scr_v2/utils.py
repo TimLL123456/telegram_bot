@@ -282,6 +282,28 @@ class SettingManager:
     def trans_category_name_update(self):
         new_category_name = self.user_input
         self.user_settings[self.user_id]["temp_transaction"]["category_name"] = new_category_name
+
+        category_type = self.user_settings[self.user_id]["temp_transaction"]["category_type"]
+        category_name = self.user_settings[self.user_id]["temp_transaction"]["category_name"]
+
+        ########################
+        # Validate category name
+        ########################
+        category_id = get_category_id(category_type, category_name, self.user_id)
+        if category_id is None:
+            categories_info_list = [record[1] for record in get_user_categories_info(self.user_id) if record[0] == category_type]
+
+            reminder_message = (
+              "Cannot found the category name in database. Please input the category name from below:\n\n"
+            )
+
+            for category in categories_info_list:
+              reminder_message += f"• <code>{category}</code>\n"
+            
+            SendMessage(self.user_id, reminder_message)
+
+            return self.user_settings
+
         self.user_settings[self.user_id]["option"] = None
 
         temp_transaction = self.user_settings[self.user_id]["temp_transaction"]

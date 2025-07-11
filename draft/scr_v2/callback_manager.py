@@ -2,6 +2,7 @@ import logging
 
 from utils import *
 from telegram_api import *
+from supabase_api import *
 
 logger = logging.getLogger(f'flask_app.{__name__}')
 
@@ -207,6 +208,16 @@ class CallbackManager:
         temp_transaction = user_callback_dict["temp_transaction"]
         if temp_transaction is None:
             return None
+
+        # Save data into database
+        category_type = temp_transaction["category_type"]
+        category_name = temp_transaction["category_name"]
+        temp_transaction["category_id"] = get_category_id(category_type, category_name, user_id)
+
+        del temp_transaction["category_type"]
+        del temp_transaction["category_name"]
+
+        transaction_insert(temp_transaction)
 
         self.user_settings[user_id]["temp_transaction"] = None
 
