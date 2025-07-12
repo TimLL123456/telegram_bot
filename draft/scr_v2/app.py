@@ -84,9 +84,9 @@ def transaction_parser_llm():
             )
 
         # Extracts bookkeeping features by LLM
-        # llm_response = extractor_llm.extract_bookkeeping_features(user_input=user_input, user_id=user_id)
-        logger.debug("Saving money: fixed ouput")
-        llm_response = {'is_transaction': True, 'date': '2025-07-10', 'category_type': 'Expense', 'category_name': 'Food', 'description': 'KFC', 'currency': 'HKD', 'price': 50.0}
+        llm_response = extractor_llm.extract_bookkeeping_features(user_input=user_input, user_id=user_id)
+        # logger.debug("Saving money: fixed ouput")
+        # llm_response = {'is_transaction': True, 'date': '2025-07-10', 'category_type': 'Expense', 'category_name': 'Food', 'description': 'KFC', 'currency': 'HKD', 'price': 50.0}
 
         # Check if the LLM response indicates a transaction
         if llm_response["is_transaction"] is False:
@@ -265,4 +265,4 @@ def telegram():
     return Response(status=200)
 
 if __name__ == "__main__":
-    app.run(debug=False, host="0.0.0.0", port=5000, use_reloader=False)
+    app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=True)

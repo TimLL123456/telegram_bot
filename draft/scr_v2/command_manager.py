@@ -71,7 +71,7 @@ class CommandManager:
             "•  <b>/register</b>\n"
             "\n"
             "<b>3. View a monthly summary:</b>\n"
-            "•  <b>/monthlysummary</b> (coming soon!)\n"
+            "•  <b>/monthlysummary</b>\n"
             "\n"
             "<b>4. Get help anytime:</b>\n"
             "•  <b>/help</b>\n"
@@ -223,7 +223,9 @@ class CommandManager:
         keyboard_setting = {
             "inline_keyboard": [
                 [
-                    {"text": "Open Website", "url": "https://www.google.com/"}
+                    # {"text": "Open Website", "url": f"http://localhost:8000/?user_id={user_id}"}
+                    {"text": "Open Website", "url": f"http://223.18.94.64:8000/?user_id={user_id}"}
+                    # {"text": "Open Website", "url": f"https://www.google.com.hk/"}
                 ]
             ]
         }

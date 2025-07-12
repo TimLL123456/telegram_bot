@@ -3,11 +3,19 @@ import pandas as pd
 from supabase_api import *
 import matplotlib.pyplot as plt
 
+st.set_page_config(layout="wide")
 st.title("Report")
 
-user_id = st.text_input("Enter your user id:")
+# Get query parameters
+query_params = st.query_params
+
+user_id = query_params.get("user_id", "")
+user_info = get_user_info(user_id)
 
 if user_id:
+
+  st.subheader(f"Welcome, {user_info['username']}!!!")
+
   transactions_data = get_transactions_table_by_user(user_id)
   categories_data = get_categories_table_by_user(user_id)
 
