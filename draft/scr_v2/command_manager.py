@@ -216,6 +216,19 @@ class CommandManager:
 
         monthly_summary_message = (
             "<b>📅 Monthly Summary</b>\n\n"
+            f"Please input you user id (<b><code>{user_id}</code></b>) into the website shown to get your report\n\n"
             "This feature is under development. Stay tuned for updates!"
         )
-        SendMessage(user_id, monthly_summary_message)
+
+        keyboard_setting = {
+            "inline_keyboard": [
+                [
+                    {"text": "Open Website", "url": "https://www.google.com/"}
+                ]
+            ]
+        }
+
+        # SendMessage(user_id, monthly_summary_message)
+
+
+        SendInlineKeyboardMessage(user_id, monthly_summary_message, keyboard_setting) 

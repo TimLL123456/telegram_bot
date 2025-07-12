@@ -8,6 +8,26 @@ url= os.environ.get("SUPABASE_URL")
 key= os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
+def get_transactions_table_by_user(user_id:int):
+    response = (
+        supabase.table("transactions")
+        .select("*")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    return response.data if response.data else None
+
+def get_categories_table_by_user(user_id:int):
+    response = (
+        supabase.table("categories")
+        .select("*")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    return response.data if response.data else None
+
 def get_category_id(cat_type:str, cat_name:str,  user_id:int) -> int:
     """
     Retrieve the category ID from the database based on category type, name, and user ID.
