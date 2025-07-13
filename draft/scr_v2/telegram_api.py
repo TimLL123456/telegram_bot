@@ -2,7 +2,7 @@ import config
 import requests
 import json
 
-def parse_tg_api_respnse_info(api_response: dict) -> dict:
+def parse_tg_api_respnse_info(api_response: dict) -> tuple:
     """
     Parses the Telegram API response to extract relevant information.
 
@@ -10,8 +10,10 @@ def parse_tg_api_respnse_info(api_response: dict) -> dict:
         api_response (dict): The JSON response from the Telegram API.
 
     Returns:
-        dict: A dictionary containing the update type and relevant information.   
+        tuple: A tuple containing the update type and relevant information.   
     """
+
+    update_type, response_info = None, {}
     
     # Extract relevant information from the API response
     if "message" in api_response:
@@ -126,4 +128,4 @@ def transaction_parser_llm(user_id: int, user_input: str):
         }
     )
 
-    # return response.json()
+    return response.json()

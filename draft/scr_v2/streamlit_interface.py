@@ -1,18 +1,20 @@
 import streamlit as st
 import pandas as pd
 from supabase_api import *
-import matplotlib.pyplot as plt
-
-st.set_page_config(layout="wide")
-st.title("Report")
+import plotly.express as px
 
 # Get query parameters
 query_params = st.query_params
 
-user_id = query_params.get("user_id", "")
-user_info = get_user_info(user_id)
+if query_params:
+  user_id = query_params.get("user_id", "")
+  user_info = get_user_info(user_id)
+else:
+  user_id = None
 
 if user_id:
+  st.set_page_config(layout="wide")
+  st.title("Report")
 
   st.subheader(f"Welcome, {user_info['username']}!!!")
 
@@ -28,21 +30,27 @@ if user_id:
   merge_df['date'] = pd.to_datetime(merge_df['date'])
 
   # Configure column widths
-  st.dataframe(merge_df)
+  with st.expander("Expense History"):
+    st.dataframe(merge_df)
 
+  a,b,c = st.columns(3)
+  a.metric(label="Total Spending", value=f"${merge_df["amount"].sum()}", delta="1.2 °F", border=True, width=200)
 
   category_type_sum_df = merge_df.groupby(['category_type'])['amount'].sum().reset_index()
   category_name_sum_df = merge_df.groupby(['category_name'])['amount'].sum().reset_index()
 
 
-  fig, ax = plt.subplots(figsize=(3, 2))  # width=10, height=5 inches
-  bars = ax.bar(category_type_sum_df['category_type'], category_type_sum_df['amount'])
-  ax.bar_label(bars, padding=3) 
-  st.pyplot(fig, use_container_width=False)
+  col1, col2 = st.columns(2)
+  with col1:
+    fig = px.pie(category_type_sum_df,
+                 values='amount',
+                 names='category_type',
+                 title='Distribution of Category Type')
+    st.plotly_chart(fig)
 
-
-  fig, ax = plt.subplots(figsize=(3, 2))  # width=10, height=5 inches
-  bars = ax.bar(category_name_sum_df['category_name'], category_name_sum_df['amount'])
-  ax.bar_label(bars, padding=3) 
-  st.pyplot(fig, use_container_width=False)
-
+  with col2:
+    fig = px.pie(category_name_sum_df,
+                 values='amount',
+                 names='category_name',
+                 title='Distribution of Category Name')
+    st.plotly_chart(fig)
