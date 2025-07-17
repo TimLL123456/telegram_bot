@@ -2,175 +2,151 @@ import streamlit as st
 import pandas as pd
 from supabase_api import *
 import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import relativedelta
 
 # Get query parameters
 query_params = st.query_params
 
 if query_params:
-  user_id = query_params.get("user_id", "")
-  user_info = get_user_info(user_id)
+    user_id = query_params.get("user_id", "")
+    user_info = get_user_info(user_id)
 else:
-  user_id = None
+    user_id = None
 
 if user_id:
-  st.set_page_config(layout="wide")
-  st.title("Report")
+    st.title("Financial Dashboard")
+    st.subheader(f"Welcome, {user_info['username']}!!!")
 
-  st.subheader(f"Welcome, {user_info['username']}!!!")
+    # Fetch data
+    transactions_data = get_transactions_table_by_user(user_id)
+    categories_data = get_categories_table_by_user(user_id)
 
-  transactions_data = get_transactions_table_by_user(user_id)
-  categories_data = get_categories_table_by_user(user_id)
+    transactions_df = pd.DataFrame(transactions_data)
+    categories_df = pd.DataFrame(categories_data)
 
-  transactions_df = pd.DataFrame(transactions_data)
-  categories_df = pd.DataFrame(categories_data)
+    # Process data
+    transactions_df = transactions_df[["created_at", "updated_at", "date", "category_id", "description", "currency", "amount"]]
+    merge_df = transactions_df.merge(categories_df, how='inner', on='category_id')
+    merge_df = merge_df[["created_at", "updated_at", "date", "category_type", "category_name", "description", "currency", "amount"]]
+    merge_df['date'] = pd.to_datetime(merge_df['date'])
 
-  transactions_df = transactions_df[["created_at", "updated_at", "date", "category_id", "description",  "currency", "amount"]]
-  merge_df = transactions_df.merge(categories_df, how='inner', on='category_id')
-  merge_df = merge_df[["created_at", "updated_at", "date", "category_type", "category_name", "description", "currency", "amount"]]
-  merge_df['date'] = pd.to_datetime(merge_df['date'])
+    # Date filter
+    st.subheader("Select Transactions by Date")
+    col1, col2 = st.columns(2)
+    first_day_of_this_month = date(year=datetime.today().year, month=datetime.today().month, day=1)
+    with col1:
+        start_date = st.date_input(label="Start Date", value=first_day_of_this_month)
+    with col2:
+        end_date = st.date_input(label="End Date", value=first_day_of_this_month+relativedelta(months=1)-timedelta(days=1))
 
-  # Configure column widths
-  with st.expander("Expense History"):
-    st.dataframe(merge_df)
+    # Filter dataframe by date range
+    mask = (merge_df['date'].dt.date >= start_date) & (merge_df['date'].dt.date <= end_date)
+    transaction_df = merge_df[mask]
 
-  category_type_sum_df = merge_df.groupby(['category_type'])['amount'].sum().reset_index()
-  category_name_sum_df = merge_df.groupby(['category_name'])['amount'].sum().reset_index()
+    # Display transaction history
+    with st.expander("Transaction History"):
+        st.dataframe(transaction_df.sort_values(by='date', ascending=False))
 
-  st.dataframe(category_type_sum_df)
+    st.dataframe(transaction_df.groupby("date")["amount"].sum().reset_index())
 
-  a,b,c = st.columns(3)
-  a.metric(label="Expense", value=f"${category_type_sum_df[category_type_sum_df["category_type"] == "Expense"]["amount"].values[0]}", width=200)
-  b.metric(label="Income", value=f"${category_type_sum_df[category_type_sum_df["category_type"] == "Income"]["amount"].values[0]}", width=200)
-  c.metric(label="Total Spending", value=f"${merge_df["amount"].sum()}", width=200)
-
-
-  col1, col2 = st.columns(2)
-  with col1:
-    fig = px.pie(category_type_sum_df,
-                 values='amount',
-                 names='category_type',
-                 title='Distribution of Category Type')
-    st.plotly_chart(fig)
-
-  with col2:
-    fig = px.pie(category_name_sum_df,
-                 values='amount',
-                 names='category_name',
-                 title='Distribution of Category Name')
-    st.plotly_chart(fig)
-
-
-import numpy as np
-np.random.seed(42)
-dates = pd.date_range(start="2024-01-01", end="2025-07-14", freq="D")
-sample_transactions = pd.DataFrame({
-    'transaction_id': range(1, 151),
-    'user_id': 1,
-    'date': np.random.choice(dates, 150),
-    'category_id': np.random.choice([1, 2, 3, 4, 5], 150),
-    'description': ['Grocery', 'Utility', 'Entertainment', 'Travel', 'Dining'] * 30,
-    'amount': np.random.uniform(5, 1000, 150),
-    'currency': ['USD'] * 150,
-    'is_deleted': False,
-    'created_at': pd.Timestamp.now(),
-    'updated_at': pd.Timestamp.now()
-})
-
-sample_categories = pd.DataFrame({
-    'category_id': [1, 2, 3, 4, 5],
-    'category_type': ['Food', 'Bills', 'Leisure', 'Travel', 'Food'],
-    'category_name': ['Grocery', 'Utility', 'Entertainment', 'Travel', 'Dining'],
-    'created_at': pd.Timestamp.now(),
-    'updated_at': pd.Timestamp.now()
-})
-
-sample_users = pd.DataFrame({
-    'user_id': [1],
-    'username': ['johndoe'],
-    'default_currency': ['USD'],
-    'created_at': pd.Timestamp.now(),
-    'updated_at': pd.Timestamp.now()
-})
-
-# Filter transactions for the user and exclude deleted ones
-user_transactions = sample_transactions[sample_transactions['user_id'] == 1]
-
-# Merge with categories to get category names
-user_transactions = user_transactions.merge(sample_categories[['category_id', 'category_name']], on='category_id', how='left')
-
-# Convert 'date' to datetime and create 'month' column
-user_transactions['date'] = pd.to_datetime(user_transactions['date'])
-user_transactions['month'] = user_transactions['date'].dt.to_period('M').dt.to_timestamp()
-
-# Streamlit app
-st.title("Detailed Personal Expense Report")
-
-# Date range filter
-min_date = user_transactions['date'].min().date()
-max_date = user_transactions['date'].max().date()
-date_range = st.date_input("Select Date Range", [min_date, max_date])
-filtered_transactions = user_transactions[
-    (user_transactions['date'] >= pd.to_datetime(date_range[0])) & 
-    (user_transactions['date'] <= pd.to_datetime(date_range[1]))
-]
-
-# Category filter
-categories_list = filtered_transactions['category_name'].unique()
-selected_categories = st.multiselect("Select Categories", categories_list, default=categories_list)
-filtered_transactions = filtered_transactions[filtered_transactions['category_name'].isin(selected_categories)]
-
-# Custom Metric Cards with centered text inside borders
-st.subheader("Key Financial Metrics")
-col1, col2, col3, col4 = st.columns(4)
-
-with col1:
-    st.markdown(
-        """
-        <div style="border: 2px solid #ccc; border-radius: 5px; padding: 10px; height: 100px; display: flex; justify-content: center; align-items: center; text-align: center;">
-            <div>
-                <h4 style="margin: 0;">Total Spending</h4>
-                <p style="margin: 0; font-size: 18px;">${:,.2f}</p>
-            </div>
-        </div>
-        """.format(filtered_transactions['amount'].sum()),
-        unsafe_allow_html=True
+    # Create line chart with Plotly Express
+    fig = px.line(
+        data_frame=transaction_df.groupby("date")["amount"].sum().reset_index(),
+        x='date',
+        y='amount',
+        title='Daily Transaction Amounts',
+        labels={'date': 'Date', 'amount': 'Amount ($)'},
+        template='plotly'  # Use a clean theme
     )
 
-with col2:
-    st.markdown(
-        """
-        <div style="border: 2px solid #ccc; border-radius: 5px; padding: 10px; height: 100px; display: flex; justify-content: center; align-items: center; text-align: center;">
-            <div>
-                <h4 style="margin: 0;">Avg Monthly Spending</h4>
-                <p style="margin: 0; font-size: 18px;">${:,.2f}</p>
-            </div>
-        </div>
-        """.format(filtered_transactions.groupby('month')['amount'].sum().mean()),
-        unsafe_allow_html=True
+    # Customize line chart
+    fig.update_layout(
+        xaxis_title="Date",
+        yaxis_title="Amount ($)",
+        hovermode="x unified"  # Unified hover tooltip for better UX
     )
 
-with col3:
-    st.markdown(
-        """
-        <div style="border: 2px solid #ccc; border-radius: 5px; padding: 10px; height: 100px; display: flex; justify-content: center; align-items: center; text-align: center;">
-            <div>
-                <h4 style="margin: 0;">Highest Expense</h4>
-                <p style="margin: 0; font-size: 18px;">${:,.2f}</p>
-            </div>
-        </div>
-        """.format(filtered_transactions['amount'].max()),
-        unsafe_allow_html=True
-    )
+    # Display in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
-with col4:
-    st.markdown(
-        """
-        <div style="border: 2px solid #ccc; border-radius: 5px; padding: 10px; height: 100px; display: flex; justify-content: center; align-items: center; text-align: center;">
-            <div>
-                <h4 style="margin: 0;">Transaction Count</h4>
-                <p style="margin: 0; font-size: 18px;">{}</p>
-            </div>
-        </div>
-        """.format(len(filtered_transactions)),
-        unsafe_allow_html=True
-    )
+else:
+    st.error("Please provide a valid user_id to view the dashboard.")
+
+# if user_id:
+#     # st.set_page_config(layout="wide")
+#     st.title("Financial Dashboard")
+
+#     st.subheader(f"Welcome, {user_info['username']}!!!")
+
+#     # Fetch data
+#     transactions_data = get_transactions_table_by_user(user_id)
+#     categories_data = get_categories_table_by_user(user_id)
+
+#     transactions_df = pd.DataFrame(transactions_data)
+#     categories_df = pd.DataFrame(categories_data)
+
+#     # Process data
+#     transactions_df = transactions_df[["created_at", "updated_at", "date", "category_id", "description", "currency", "amount"]]
+#     merge_df = transactions_df.merge(categories_df, how='inner', on='category_id')
+#     merge_df = merge_df[["created_at", "updated_at", "date", "category_type", "category_name", "description", "currency", "amount"]]
+#     merge_df['date'] = pd.to_datetime(merge_df['date'])
+
+#     # Date filter
+#     st.subheader("Filter Transactions by Date")
+#     col1, col2 = st.columns(2)
+#     with col1:
+#         start_date = st.date_input("Start Date", value=datetime.now() - timedelta(days=30))
+#     with col2:
+#         end_date = st.date_input("End Date", value=datetime.now())
+    
+#     # Filter dataframe by date range
+#     mask = (merge_df['date'].dt.date >= start_date) & (merge_df['date'].dt.date <= end_date)
+#     filtered_df = merge_df[mask]
+
+#     # Display transaction history
+#     with st.expander("Transaction History"):
+#         st.dataframe(filtered_df.sort_values(by='date', ascending=False))
+
+#     # Calculate metrics
+#     category_type_sum_df = filtered_df.groupby(['category_type'])['amount'].sum().reset_index()
+#     category_name_sum_df = filtered_df.groupby(['category_name'])['amount'].sum().reset_index()
+#     avg_transaction_df = filtered_df.groupby(['category_name'])['amount'].mean().reset_index().rename(columns={'amount': 'avg_amount'})
+
+#     # Metrics layout
+#     st.subheader("Key Metrics")
+#     col1, col2, col3, col4 = st.columns(4)
+#     expense = category_type_sum_df[category_type_sum_df["category_type"] == "Expense"]["amount"].sum() if "Expense" in category_type_sum_df["category_type"].values else 0
+#     income = category_type_sum_df[category_type_sum_df["category_type"] == "Income"]["amount"].sum() if "Income" in category_type_sum_df["category_type"].values else 0
+#     net_balance = income - expense
+
+#     with col1:
+#         st.metric(label="Total Income", value=f"${income:,.2f}")
+#     with col2:
+#         st.metric(label="Total Expense", value=f"${expense:,.2f}")
+#     with col3:
+#         st.metric(label="Net Balance", value=f"${net_balance:,.2f}", delta=f"{net_balance:,.2f}")
+#     with col4:
+#         st.metric(label="Total Transactions", value=len(filtered_df))
+
+#     # Visualizations
+#     st.subheader("Spending Insights")
+
+#     # Monthly spending trend
+#     monthly_trend = filtered_df.groupby([filtered_df['date'].dt.to_period('M'), 'category_type'])['amount'].sum().reset_index()
+#     monthly_trend['date'] = monthly_trend['date'].dt.to_timestamp()
+#     fig_trend = px.line(monthly_trend, x='date', y='amount', color='category_type', title="Monthly Spending Trend")
+#     st.plotly_chart(fig_trend, use_container_width=True)
+
+#     # Top expense categories
+#     expense_cats = category_name_sum_df[category_name_sum_df['amount'] > 0].sort_values(by='amount', ascending=False).head(5)
+#     fig_cats = px.bar(expense_cats, x='category_name', y='amount', title="Top Expense Categories")
+#     st.plotly_chart(fig_cats, use_container_width=True)
+
+#     # Average transaction amount per category
+#     fig_avg = px.bar(avg_transaction_df, x='category_name', y='avg_amount', title="Average Transaction Amount per Category")
+#     st.plotly_chart(fig_avg, use_container_width=True)
+
+# else:
+#     st.error("Please provide a valid user_id to view the dashboard.")
