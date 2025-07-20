@@ -18,7 +18,7 @@ jobs:
         uses: imehedi/actions-awscli-v2@latest
         with:
           args: "lambda update-function-code \
-            --function-name arn:aws:lambda:ap-southeast-2:691831409651:function:Test_Telegram_Bot \
+            --function-name arn:aws:lambda:ap-southeast-2:691831409651:function:telegram_bot_test \
             --zip-file fileb://code.zip"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
