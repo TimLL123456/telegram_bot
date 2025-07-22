@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  flask_test:
+    build:
+      context: ..
+      dockerfile: ./Docker/dockerfile.flask_test
+    env_file:
+      - ../.env
+    ports:
+      - "5000:5000"
+    # volumes:
+    #   - ./draft/scr_v2:/usr/src/app
+    restart: unless-stopped
+
+  streamlit_test:
+    build:
+      context: ..
+      dockerfile: ./Docker/dockerfile.streamlit_test
+    env_file:
+      - ../.env
+    ports:
+      - "8501:8501"
+    # volumes:
+    #   - ./draft/scr_v2:/usr/src/app
+    restart: unless-stopped

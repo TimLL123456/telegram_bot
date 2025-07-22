@@ -11,3 +11,5 @@ tqdm
 langchain-perplexity
 langchain-deepseek
 langchain-gemini
+plotly
+streamlit
