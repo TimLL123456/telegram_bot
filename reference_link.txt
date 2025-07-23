@@ -1,1 +1,5 @@
 https://github.com/go-telegram/ui
+
+
+# AWS
+https://www.youtube.com/watch?v=h4ALnQoEGjQ&list=PLCiETF0C4mafBNw4znWh5mKmB8M-NTuFz&index=6
