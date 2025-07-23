@@ -9,3 +9,6 @@ __pycache__/
 
 # Environment variables / secrets
 *.env
+
+.venv/
+uv.lock
