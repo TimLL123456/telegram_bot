@@ -1,0 +1,33 @@
+# Use official lightweight Python image as the base
+FROM python:3.12-slim
+
+# Set working directory in the container
+WORKDIR /usr/src/app
+
+# Install system dependencies (if needed)
+RUN apt-get update && apt-get install -y \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create requirements.txt inside the container using echo
+RUN echo "streamlit\npandas\nnumpy" > requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create streamlit_test.py file using echo
+RUN echo "import streamlit as st\n\
+import pandas as pd\n\
+import numpy as np\n\n\
+st.title('Simple Streamlit Test App')\n\
+st.write('This is a sample Streamlit app running inside the Docker container.')\n\n\
+data = pd.DataFrame({\n\
+    'x': np.arange(1, 11),\n\
+    'y': np.random.randn(10),\n\
+})\n\n\
+st.line_chart(data.set_index('x'))" > streamlit_test.py
+
+# Expose the port Streamlit will run on
+EXPOSE 8501
+
+# Run the Streamlit app
+ENTRYPOINT ["streamlit", "run", "streamlit_test.py", "--server.port=8501", "--server.address=0.0.0.0"]
