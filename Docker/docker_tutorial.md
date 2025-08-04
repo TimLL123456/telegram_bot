@@ -42,6 +42,12 @@ docker system prune
 docker system prune -a
 ```
 
+## Check docker status
+* Check if it is running
+```bash
+sudo systemctl status docker
+```
+
 ---
 
 </details>

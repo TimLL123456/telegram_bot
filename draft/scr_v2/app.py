@@ -262,6 +262,9 @@ def telegram():
 
             return Response(status=200)
 
+    else:
+        return "<h1>Nothing Here</h1>"
+
     return Response(status=200)
 
 if __name__ == "__main__":
