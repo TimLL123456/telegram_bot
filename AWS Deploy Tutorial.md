@@ -1,6 +1,6 @@
 # Docker
 
-1. Build docker image for flask-app & streamlit-app
+1. Build docker image for flask-app & streamlit-app in local machine
 ```bash
 docker build -f ./Docker/dockerfile.flask -t flask-app .
 ```
