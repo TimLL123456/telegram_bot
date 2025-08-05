@@ -24,3 +24,25 @@ services:
     # volumes:
     #   - ./draft/scr_v2:/usr/src/app
     restart: unless-stopped
+
+#############
+# Version 2 #
+#############
+# version: "3.8"
+
+# services:
+#   flask:
+#     image:
+#       691831409651.dkr.ecr.ap-southeast-1.amazonaws.com/tg_bot:flask-app
+#     restart: always
+#     ports:
+#       - "5000:5000"
+
+#   streamlit:
+#     image:
+#       691831409651.dkr.ecr.ap-southeast-1.amazonaws.com/tg_bot:streamlit-app
+#     restart: always
+#     depends_on:
+#       - flask
+#     ports:
+#       - "8501:8501"

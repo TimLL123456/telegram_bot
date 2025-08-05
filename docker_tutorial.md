@@ -193,3 +193,9 @@ services:
 ```bash
 docker compose -f ./Docker/docker-compose.yml up
 ```
+
+or
+
+```bash
+sudo docker-compose up --build
+```

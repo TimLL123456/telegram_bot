@@ -223,8 +223,8 @@ class CommandManager:
         keyboard_setting = {
             "inline_keyboard": [
                 [
-                    # {"text": "Open Website", "url": f"http://localhost:8501/?user_id={user_id}"}
-                    {"text": "Open Website", "url": f"http://223.18.94.64:8501/?user_id={user_id}"}
+                    {"text": "Open Website", "url": f"http://18.141.159.254:8501/?user_id={user_id}"}
+                    # {"text": "Open Website", "url": f"http://223.18.94.64:8501/?user_id={user_id}"}
                     # {"text": "Open Website", "url": f"https://www.google.com.hk/"}
                 ]
             ]

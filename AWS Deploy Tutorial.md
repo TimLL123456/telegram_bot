@@ -113,8 +113,10 @@ ngrok config add-authtoken [authtoken]
 https://api.telegram.org/bot[telegram_bot_token]/setWebhook?url=[ngrok_url]
 ```
 
-12. Run python script with `Screen`
-```
+12. Deploy
+
+* Run python script with `Screen`
+```bash
 screen -S flask-app
 docker run -p 5000:5000 <image_name>
 
@@ -123,4 +125,10 @@ ngrok http http://localhost:5000
 
 screen -S streamlit-app
 docker run -p 8501:8501 <image_name>
+```
+
+* Run docker-compose with `Screen`
+```bash
+screen -S tg_bot_docker_compose
+sudo docker-compose up --build
 ```
