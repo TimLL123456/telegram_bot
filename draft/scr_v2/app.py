@@ -166,6 +166,11 @@ def telegram():
 
         # Retrieve the `user ID` & `user text input` from telegram chatroom api response
         tg_user_id = tg_api_response_info["message"]["chat"]["id"]
+
+        if not tg_api_response_info["message"].get("text"):
+            SendMessage(tg_user_id, "Please input text")
+            return Response(status=200)
+
         user_input = tg_api_response_info["message"]["text"]
         logger.debug(f"user_input: {user_input}")
         
