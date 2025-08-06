@@ -17,17 +17,6 @@ A sophisticated Telegram bot for personal finance management that uses AI-powere
 - **Transaction History**: View, edit, and delete past transactions
 - **Category Management**: Custom categories for better organization
 
-### Reporting & Analytics
-- **Monthly Summaries**: Comprehensive monthly financial reports
-- **Category Breakdown**: Expense analysis by category
-- **Visual Reports**: Charts and graphs via Streamlit interface
-- **Export Functionality**: CSV export for external analysis
-
-### User Management
-- **Multi-User Support**: Each user's data is isolated and secure
-- **User Preferences**: Customizable default currency and settings
-- **Registration System**: Simple onboarding process
-
 ## 🏗️ Architecture
 
 ```
